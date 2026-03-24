@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
+import { checkPermission } from "@/lib/permissions";
 import type { Prisma } from "@prisma/client";
 
 // ============================================================================
@@ -14,6 +15,8 @@ export async function GET(request: NextRequest) {
     if (!session?.user) {
       return apiError("Oturum açmanız gerekiyor", 401);
     }
+
+    checkPermission(session.user.role, "read", "finance");
 
     const { searchParams } = request.nextUrl;
     const dateFromStr = searchParams.get("dateFrom");
@@ -132,6 +135,9 @@ export async function GET(request: NextRequest) {
       monthlyTrend: monthlyData,
     });
   } catch (error) {
+    if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
+      return apiError(error.message, 403);
+    }
     console.error("Finansal ozet hatasi:", error);
     return apiError("Finansal özet yüklenirken bir hata oluştu", 500);
   }

@@ -42,7 +42,7 @@ export const milkRecordFilterSchema = z.object({
   endDate: z.coerce.date().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
-  sortBy: z.string().default("date"),
+  sortBy: z.enum(["createdAt", "date", "quantity"]).default("date"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
@@ -82,7 +82,7 @@ export const milkSaleFilterSchema = z.object({
   buyerName: z.string().trim().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
-  sortBy: z.string().default("date"),
+  sortBy: z.enum(["createdAt", "date", "quantity"]).default("date"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 

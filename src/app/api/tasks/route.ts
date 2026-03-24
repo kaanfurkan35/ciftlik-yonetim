@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { taskCreateSchema, taskFilterSchema } from "@/lib/validations/task";
+import { createNotification } from "@/lib/notifications";
 import type { Prisma } from "@prisma/client";
 
 // ============================================================================
@@ -132,6 +133,17 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Görev atama bildirimi oluştur (fire-and-forget)
+    if (data.assignedToId) {
+      createNotification({
+        farmId: session.user.farmId,
+        userId: data.assignedToId,
+        type: "TASK_ASSIGNED",
+        title: "Yeni Görev",
+        message: `Size yeni bir görev atandı: ${task.title}.`,
+      });
+    }
 
     return apiSuccess(task);
   } catch (error) {

@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
       return apiError("Oturum açmanız gerekiyor", 401);
     }
 
+    checkPermission(session.user.role, "read", "milk");
+
     const { searchParams } = request.nextUrl;
     const parsed = milkRecordFilterSchema.safeParse({
       animalId: searchParams.get("animalId") || undefined,
@@ -83,6 +85,9 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
+    if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
+      return apiError(error.message, 403);
+    }
     console.error("Süt kayıtları listesi hatası:", error);
     return apiError("Süt kayıtları yüklenirken bir hata oluştu", 500);
   }

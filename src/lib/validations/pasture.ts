@@ -40,7 +40,7 @@ export const pastureFilterSchema = z.object({
   condition: pastureConditionEnum.optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
-  sortBy: z.string().default("createdAt"),
+  sortBy: z.enum(["createdAt", "name", "sizeDekar", "capacity"]).default("createdAt"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 

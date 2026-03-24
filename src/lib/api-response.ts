@@ -15,6 +15,8 @@ export function apiError(error: string, status: number = 400) {
   return NextResponse.json({ success: false, error }, { status });
 }
 
+// NOTE: sortBy is not validated here. Callers should use domain-specific
+// Zod filter schemas (e.g. animalFilterSchema) which whitelist sortBy via z.enum().
 export function parseSearchParams(searchParams: URLSearchParams) {
   const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20")));

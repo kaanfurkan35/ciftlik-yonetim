@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
       return apiError("Oturum açmanız gerekiyor", 401);
     }
 
+    checkPermission(session.user.role, "read", "health");
+
     const { searchParams } = request.nextUrl;
     const parsed = healthRecordFilterSchema.safeParse({
       animalId: searchParams.get("animalId") || undefined,
@@ -83,6 +85,9 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
+    if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
+      return apiError(error.message, 403);
+    }
     console.error("Saglik kayitlari listesi hatasi:", error);
     return apiError("Sağlık kayıtları yüklenirken bir hata oluştu", 500);
   }

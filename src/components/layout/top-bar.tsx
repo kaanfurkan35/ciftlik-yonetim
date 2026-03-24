@@ -108,7 +108,7 @@ export function TopBar({ user, notificationCount = 0 }: TopBarProps) {
         </Button>
 
         <DropdownMenu>
-          <DropdownMenuTrigger className="cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <DropdownMenuTrigger aria-label="Kullanıcı menüsü" className="cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <Avatar size="sm">
               {user.image && <AvatarImage src={user.image} alt={user.name} />}
               <AvatarFallback>{getInitials(user.name)}</AvatarFallback>

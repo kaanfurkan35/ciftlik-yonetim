@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
+import { createAuditLog } from "@/lib/audit";
 
 // ============================================================================
 // POST /api/backup - JSON yedekleme olustur
@@ -124,6 +125,14 @@ export async function POST(request: NextRequest) {
         farmId,
         createdById: session.user.id,
       },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "BACKUP",
+      entityType: "BackupRecord",
+      entityId: filename,
     });
 
     // JSON dosyasi olarak dondur

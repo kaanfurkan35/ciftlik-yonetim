@@ -60,7 +60,7 @@ export const animalFilterSchema = z.object({
   breed: z.string().trim().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
-  sortBy: z.string().default("createdAt"),
+  sortBy: z.enum(["createdAt", "earTagNumber", "name", "dateOfBirth", "status"]).default("createdAt"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 

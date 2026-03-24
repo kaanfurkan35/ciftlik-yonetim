@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError, parseSearchParams } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { animalCreateSchema, animalFilterSchema } from "@/lib/validations/animal";
+import { createAuditLog } from "@/lib/audit";
 import type { Prisma } from "@prisma/client";
 
 // ============================================================================
@@ -133,6 +134,14 @@ export async function POST(request: NextRequest) {
         farmId: session.user.farmId,
         createdById: session.user.id,
       },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "CREATE",
+      entityType: "Animal",
+      entityId: animal.id,
     });
 
     return apiSuccess(animal);

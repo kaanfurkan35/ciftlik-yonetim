@@ -5,6 +5,8 @@ import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { createAuditLog } from "@/lib/audit";
+import { passwordSchema } from "@/lib/validations/user";
 
 // ============================================================================
 // Kullanici olusturma schemasi
@@ -13,7 +15,7 @@ import { z } from "zod";
 const userCreateSchema = z.object({
   name: z.string().trim().min(1, "İsim zorunludur"),
   email: z.string().email("Geçersiz e-posta adresi"),
-  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
+  password: passwordSchema,
   phone: z.string().trim().optional(),
   role: z.enum(
     ["ADMIN", "MANAGER", "WORKER", "VIEWER"],
@@ -31,6 +33,8 @@ export async function GET(request: NextRequest) {
     if (!session?.user) {
       return apiError("Oturum açmanız gerekiyor", 401);
     }
+
+    checkPermission(session.user.role, "read", "users");
 
     const users = await prisma.user.findMany({
       where: {
@@ -52,6 +56,9 @@ export async function GET(request: NextRequest) {
 
     return apiSuccess(users);
   } catch (error) {
+    if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
+      return apiError(error.message, 403);
+    }
     console.error("Kullanıcı listesi hatası:", error);
     return apiError("Kullanıcılar yüklenirken bir hata oluştu", 500);
   }
@@ -108,6 +115,14 @@ export async function POST(request: NextRequest) {
         isActive: true,
         createdAt: true,
       },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "CREATE",
+      entityType: "User",
+      entityId: user.id,
     });
 
     return apiSuccess(user);

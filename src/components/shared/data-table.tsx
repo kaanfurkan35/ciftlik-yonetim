@@ -59,7 +59,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      {(searchKey || true) && (
+      {searchKey && (
         <div className="flex items-center">
           <Input
             placeholder={searchPlaceholder}
@@ -80,7 +80,7 @@ export function DataTable<TData, TValue>({
         </div>
       )}
       <div className="rounded-lg border">
-        <Table>
+        <Table aria-label="Veri tablosu">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -119,6 +119,7 @@ export function DataTable<TData, TValue>({
                 <TableCell
                   colSpan={columns.length}
                   className="h-24 text-center"
+                  aria-live="polite"
                 >
                   Kayıt bulunamadı.
                 </TableCell>
@@ -128,7 +129,7 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
       <div className="flex items-center justify-between px-2">
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-muted-foreground" aria-live="polite">
           {table.getFilteredRowModel().rows.length} adet kayıt
         </div>
         <div className="flex items-center gap-2">

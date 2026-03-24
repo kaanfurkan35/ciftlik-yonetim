@@ -62,6 +62,10 @@ export const feedingRecordSchema = z.object({
 
 export type FeedingRecordInput = z.infer<typeof feedingRecordSchema>;
 
+export const feedPurchaseUpdateSchema = feedPurchaseSchema.partial();
+
+export type FeedPurchaseUpdateInput = z.infer<typeof feedPurchaseUpdateSchema>;
+
 // ============================================================================
 // Filtre schemalari
 // ============================================================================
@@ -70,7 +74,7 @@ export const feedTypeFilterSchema = z.object({
   search: z.string().trim().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
-  sortBy: z.string().default("name"),
+  sortBy: z.enum(["createdAt", "name"]).default("name"),
   sortOrder: z.enum(["asc", "desc"]).default("asc"),
 });
 
@@ -80,7 +84,7 @@ export const feedPurchaseFilterSchema = z.object({
   dateTo: z.coerce.date().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
-  sortBy: z.string().default("date"),
+  sortBy: z.enum(["createdAt", "date"]).default("date"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
@@ -92,6 +96,6 @@ export const feedingRecordFilterSchema = z.object({
   dateTo: z.coerce.date().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
-  sortBy: z.string().default("date"),
+  sortBy: z.enum(["createdAt", "date", "name"]).default("date"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });

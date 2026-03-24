@@ -124,32 +124,37 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const record = await prisma.pregnancyCheck.create({
-      data: {
-        animalId: data.animalId,
-        inseminationId: data.inseminationId,
-        checkDate: data.checkDate,
-        result: data.result,
-        method: data.method,
-        expectedCalvingDate: data.expectedCalvingDate,
-        notes: data.notes,
-        checkedById: session.user.id,
-        createdById: session.user.id,
-      },
-      include: {
-        animal: {
-          select: { id: true, name: true, earTagNumber: true },
+    // Transaction ile gebelik kontrolu kaydi olustur ve durumu guncelle
+    const record = await prisma.$transaction(async (tx) => {
+      const newRecord = await tx.pregnancyCheck.create({
+        data: {
+          animalId: data.animalId,
+          inseminationId: data.inseminationId,
+          checkDate: data.checkDate,
+          result: data.result,
+          method: data.method,
+          expectedCalvingDate: data.expectedCalvingDate,
+          notes: data.notes,
+          checkedById: session.user.id,
+          createdById: session.user.id,
         },
-      },
-    });
-
-    // Sonuc pozitifse hayvanin durumunu PREGNANT yap
-    if (data.result === "POSITIVE") {
-      await prisma.animal.update({
-        where: { id: data.animalId },
-        data: { status: "PREGNANT" },
+        include: {
+          animal: {
+            select: { id: true, name: true, earTagNumber: true },
+          },
+        },
       });
-    }
+
+      // Sonuc pozitifse hayvanin durumunu PREGNANT yap
+      if (data.result === "POSITIVE") {
+        await tx.animal.update({
+          where: { id: data.animalId },
+          data: { status: "PREGNANT" },
+        });
+      }
+
+      return newRecord;
+    });
 
     return apiSuccess(record);
   } catch (error) {

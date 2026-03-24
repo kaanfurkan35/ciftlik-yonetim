@@ -1,13 +1,15 @@
+import "@/lib/env";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import type { UserRole } from "@prisma/client";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma) as never,
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 8 * 60 * 60 },
   pages: {
     signIn: "/login",
   },
@@ -20,6 +22,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
+
+        const { success } = rateLimit(
+          `login:${credentials.email}`,
+          5,
+          15 * 60 * 1000
+        );
+        if (!success) {
+          throw new Error(
+            "Çok fazla giriş denemesi. 15 dakika sonra tekrar deneyin."
+          );
+        }
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email as string },

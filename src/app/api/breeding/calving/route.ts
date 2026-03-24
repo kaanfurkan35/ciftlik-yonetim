@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { calvingRecordSchema, breedingFilterSchema } from "@/lib/validations/breeding";
+import { createNotification } from "@/lib/notifications";
 import type { Prisma } from "@prisma/client";
 
 // ============================================================================
@@ -149,6 +150,15 @@ export async function POST(request: NextRequest) {
     await prisma.animal.update({
       where: { id: data.animalId },
       data: { status: "LACTATING" },
+    });
+
+    // Doğum bildirimi oluştur (fire-and-forget)
+    const animalName = record.animal.name || record.animal.earTagNumber;
+    createNotification({
+      farmId: session.user.farmId,
+      type: "CALVING_EXPECTED",
+      title: "Doğum Gerçekleşti",
+      message: `${animalName} için doğum kaydı oluşturuldu.`,
     });
 
     return apiSuccess(record);

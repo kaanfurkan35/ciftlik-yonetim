@@ -11,13 +11,13 @@ export const ANIMAL_STATUS_LABELS: Record<string, string> = {
 };
 
 export const ANIMAL_STATUS_COLORS: Record<string, string> = {
-  ACTIVE: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  SOLD: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  DECEASED: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
-  DRY: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  LACTATING: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
-  PREGNANT: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-  CALF: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  ACTIVE: "bg-success/10 text-success dark:bg-success/20",
+  SOLD: "bg-secondary text-secondary-foreground",
+  DECEASED: "bg-destructive/10 text-destructive",
+  DRY: "bg-muted text-muted-foreground",
+  LACTATING: "bg-primary/10 text-primary",
+  PREGNANT: "bg-accent/20 text-accent-foreground",
+  CALF: "bg-secondary text-secondary-foreground",
 };
 
 export const ANIMAL_SEX_LABELS: Record<string, string> = {

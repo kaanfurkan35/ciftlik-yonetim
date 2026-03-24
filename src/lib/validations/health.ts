@@ -48,7 +48,7 @@ export const healthRecordFilterSchema = z.object({
   dateTo: z.coerce.date().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
-  sortBy: z.string().default("date"),
+  sortBy: z.enum(["createdAt", "date", "type"]).default("date"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
@@ -87,7 +87,7 @@ export const vaccinationRecordFilterSchema = z.object({
   overdue: z.coerce.boolean().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
-  sortBy: z.string().default("date"),
+  sortBy: z.enum(["createdAt", "date"]).default("date"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
@@ -112,3 +112,35 @@ export type VaccinationTypeInput = z.infer<typeof vaccinationTypeSchema>;
 export const vaccinationTypeUpdateSchema = vaccinationTypeSchema.partial();
 
 export type VaccinationTypeUpdateInput = z.infer<typeof vaccinationTypeUpdateSchema>;
+
+// ============================================================================
+// Ilac envanteri schemasi
+// ============================================================================
+
+export const medicineInventorySchema = z.object({
+  name: z.string().trim().min(1, "İlaç adı zorunludur"),
+  type: z.string().trim().optional(),
+  quantity: z.coerce.number().min(0, "Miktar negatif olamaz"),
+  unit: z.string().trim().min(1, "Birim zorunludur"),
+  expiryDate: z.coerce.date().optional(),
+  batchNumber: z.string().trim().optional(),
+  supplier: z.string().trim().optional(),
+  cost: z.coerce.number().positive("Maliyet pozitif olmalıdır").optional(),
+});
+
+export type MedicineInventoryInput = z.infer<typeof medicineInventorySchema>;
+
+export const medicineInventoryUpdateSchema = medicineInventorySchema.partial();
+
+export type MedicineInventoryUpdateInput = z.infer<typeof medicineInventoryUpdateSchema>;
+
+export const medicineInventoryFilterSchema = z.object({
+  search: z.string().trim().optional(),
+  type: z.string().trim().optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+  sortBy: z.enum(["createdAt", "name"]).default("name"),
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
+});
+
+export type MedicineInventoryFilterInput = z.infer<typeof medicineInventoryFilterSchema>;

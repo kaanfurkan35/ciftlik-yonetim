@@ -82,7 +82,7 @@ export async function PUT(
     // Toplam tutarı yeniden hesapla (miktar veya fiyat değiştiyse)
     const quantity = data.quantity ?? Number(existing.quantity);
     const pricePerLiter = data.pricePerLiter ?? Number(existing.pricePerLiter);
-    const totalAmount = data.totalAmount ?? quantity * pricePerLiter;
+    const totalAmount = data.totalAmount ?? parseFloat((quantity * pricePerLiter).toFixed(2));
 
     const sale = await prisma.milkSale.update({
       where: { id },

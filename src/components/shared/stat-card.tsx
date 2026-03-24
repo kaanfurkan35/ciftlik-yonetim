@@ -37,8 +37,8 @@ export function StatCard({
             className={cn(
               "mt-1 flex items-center gap-1 text-xs",
               changeType === "increase"
-                ? "text-green-600 dark:text-green-400"
-                : "text-red-600 dark:text-red-400"
+                ? "text-success"
+                : "text-destructive"
             )}
           >
             {changeType === "increase" ? (
