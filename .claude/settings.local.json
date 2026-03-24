@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --yes)",
+      "Bash(where node:*)",
+      "Bash(where npm:*)",
+      "Bash(where npx:*)",
+      "Bash(echo $PATH)",
+      "Read(//c/Users/kaanf/AppData/Roaming/**)",
+      "Read(//c/Users/kaanf/**)",
+      "Read(//c/ProgramData/chocolatey/**)",
+      "Bash(cmd //c \"node --version\")",
+      "Bash(cmd //c \"npm --version\")",
+      "Bash(cmd //c \"winget install OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements\")",
+      "Bash(cmd //c \"powershell -Command \"\"winget install OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements\"\"\")",
+      "Bash(powershell.exe -Command \"winget install OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements\")",
+      "Bash(export PATH=\"/c/Program Files/nodejs:$PATH\")",
+      "Bash(npm --version)"
+    ]
+  }
+}
