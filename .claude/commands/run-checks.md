@@ -19,10 +19,10 @@ Projenin kalite kontrolünü sırasıyla çalıştır. Her adımın sonucunu rap
    npx eslint . --max-warnings=0
    ```
 
-4. **Testler**
-   ```bash
-   npx vitest run --passWithNoTests
-   ```
+4. **Ortam Değişkeni Doğrulama**
+   - `.env` dosyasının var olduğunu kontrol et
+   - `DATABASE_URL`, `AUTH_SECRET` (min 32 karakter) tanımlı mı kontrol et
+   - `AUTH_SECRET` placeholder ise ("change-this...") uyar
 
 5. **Build Doğrulama**
    ```bash
@@ -43,5 +43,14 @@ Eğer bir adımda hata varsa:
 2. Düzeltmeyi öner veya uygula
 3. O adımı tekrar çalıştır
 4. Sonraki adıma geç
+
+## Güvenlik Kontrolleri (Opsiyonel)
+
+Eğer `--security` argümanı verilmişse ek kontroller:
+- Tüm API route'larda `checkPermission()` çağrısı var mı?
+- GET endpoint'lerinde `checkPermission(role, "read", ...)` var mı?
+- Tüm mutation'larda `createAuditLog()` çağrısı var mı?
+- `sortBy` alanları `z.enum()` ile whitelist mi?
+- Hardcoded Tailwind renkleri yerine tema değişkenleri mi kullanılıyor?
 
 $ARGUMENTS

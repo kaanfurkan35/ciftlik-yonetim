@@ -4,7 +4,7 @@ Veritabanı yedekleme ve geri yükleme işlemlerini yönet.
 
 ## Komutlar
 
-Argüman olarak şu aksiyonlardan birini al: `backup`, `restore`, `export-json`, `seed`
+Argüman olarak şu aksiyonlardan birini al: `backup`, `restore`, `export-json`, `seed`, `api-backup`, `api-restore`
 
 ### backup
 PostgreSQL veritabanının tam yedeğini al:
@@ -29,7 +29,6 @@ pg_restore --clean --if-exists -d $DATABASE_URL backups/<seçilen_dosya>
 Prisma ile tüm verileri JSON olarak dışa aktar:
 - Her tablo için ayrı JSON dosyası: `backups/json_export_<tarih>/<tablo>.json`
 - Taşınabilir format, başka ortama aktarılabilir
-- Dosya boyutlarını listele
 
 ### seed
 Test verileri ile veritabanını doldur:
@@ -38,10 +37,25 @@ npx prisma db seed
 ```
 - `prisma/seed.ts` dosyasını çalıştırır
 - Oluşturulan kayıt sayılarını bildir
+- **UYARI:** Seed verileri test/varsayılan şifreler içerir, production'da kullanmayın
+
+### api-backup
+Uygulama API'si üzerinden JSON yedekleme oluştur:
+- `POST /api/backup` endpoint'ini kullan
+- Sonuç: JSON dosyası olarak indirilir
+- Avantaj: Prisma serileştirmesi ile tutarlı format
+
+### api-restore
+Uygulama API'si üzerinden JSON yedekten geri yükle:
+- `POST /api/backup/restore` endpoint'ini kullan
+- `?dryRun=true` ile önce doğrulama yap
+- Doğrulama başarılıysa gerçek geri yükleme çalıştır
+- **UYARI:** Mevcut veriler silinecek
 
 ## Güvenlik
 - `.env` dosyasından `DATABASE_URL` kullan
 - Yedek dosyalarını `.gitignore`'a ekle
 - Geri yükleme öncesi MUTLAKA onay al
+- API endpoint'leri sadece ADMIN rolü ile erişilebilir
 
 $ARGUMENTS

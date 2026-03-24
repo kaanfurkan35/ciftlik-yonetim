@@ -1,6 +1,6 @@
 # API Route Üretici
 
-Next.js App Router API route'ları oluştur.
+Next.js 16 App Router API route'ları oluştur.
 
 ## Oluşturulacak Dosyalar
 
@@ -9,11 +9,24 @@ Next.js App Router API route'ları oluştur.
 
 ## Kurallar
 
-### Genel
-- Her route'da auth kontrolü: `auth()` ile oturum doğrula
-- Rol bazlı yetkilendirme: `checkPermission(session, action, resource)`
-- Request validasyonu: `src/lib/validations/` altındaki Zod şeması ile
-- Hata yakalama: try/catch ile sarmalayıp standart hata dön
+### İmportlar
+```typescript
+import { NextRequest } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { apiSuccess, apiError } from "@/lib/api-response";
+import { checkPermission } from "@/lib/permissions";
+import { createAuditLog } from "@/lib/audit";
+import { $schemaName } from "@/lib/validations/$resource";
+```
+
+### Her Route'un Akışı
+1. `auth()` — oturum doğrula
+2. `checkPermission(session.user.role, action, resource)` — GET dahil tüm endpoint'lerde
+3. Zod validasyonu — request body veya query params
+4. Tenant izolasyonu — tüm sorgular `farmId: session.user.farmId` ile filtreli
+5. Prisma işlemi
+6. `apiSuccess()` / `apiError()` ile yanıt
 
 ### Response Formatı
 ```typescript
@@ -21,57 +34,75 @@ type ApiResponse<T> = {
   success: boolean;
   data?: T;
   error?: string;
-  meta?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  meta?: { page: number; limit: number; total: number; totalPages: number };
 };
 ```
 
 ### GET Liste
-- Sayfalama: `?page=1&limit=20`
+- Sayfalama: `?page=1&limit=20` (max 100)
 - Sıralama: `?sortBy=createdAt&sortOrder=desc`
-- Arama: `?search=text` (metin alanlarında)
+- Arama: `?search=text`
 - Filtreleme: `?status=ACTIVE&breed=SIMENTAL`
-- Soft delete filtresi: `where: { deletedAt: null }`
-- `farmId` filtresi: session'dan al
+- `sortBy` alanı Zod'da `z.enum([...])` ile whitelist olmalı
+- Soft delete filtresi: `deletedAt: null`
 
 ### POST Oluştur
 - Zod ile body doğrula
 - `createdById` ve `farmId` session'dan ekle
-- Oluşturulan kaydı dön
-
-### GET Tekil
-- `id` ve `farmId` ile bul
-- İlişkili verileri `include` ile çek
-- 404 kontrolü
+- Birden fazla DB işlemi varsa `prisma.$transaction()` kullan
+- Başarı sonrası `createAuditLog({ action: "CREATE", ... })` çağır (fire-and-forget)
 
 ### PUT Güncelle
-- Zod ile body doğrula (partial)
-- Sadece değişen alanları güncelle
-- Güncellenen kaydı dön
+- `.partial()` schema ile body doğrula
+- Kaydın var olduğunu ve `farmId` eşleştiğini kontrol et
+- Başarı sonrası `createAuditLog({ action: "UPDATE", ... })` çağır
 
 ### DELETE
 - Soft delete: `deletedAt: new Date()`
 - Kalıcı silme YAPMA
+- Başarı sonrası `createAuditLog({ action: "DELETE", ... })` çağır
+
+### Hata Yakalama
+```typescript
+} catch (error) {
+  if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
+    return apiError(error.message, 403);
+  }
+  console.error("...", error);
+  return apiError("...", 500);
+}
+```
+
+### params Tipi (Next.js 16)
+```typescript
+{ params }: { params: Promise<{ id: string }> }
+// Kullanım: const { id } = await params;
+```
 
 ### Şablon
 ```typescript
+import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { NextRequest, NextResponse } from "next/server";
-import { $SchemaName } from "@/lib/validations/$resource";
-import { apiResponse, apiError } from "@/lib/api-response";
+import { apiSuccess, apiError } from "@/lib/api-response";
+import { checkPermission } from "@/lib/permissions";
+import { createAuditLog } from "@/lib/audit";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
-    if (!session?.user) return apiError("Yetkisiz erişim", 401);
+    if (!session?.user) return apiError("Oturum açmanız gerekiyor", 401);
+
+    checkPermission(session.user.role, "read", "$RESOURCE");
+
     // ... implementasyon
+    return apiSuccess(data);
   } catch (error) {
-    return apiError("Sunucu hatası", 500);
+    if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
+      return apiError(error.message, 403);
+    }
+    console.error("...", error);
+    return apiError("...", 500);
   }
 }
 ```

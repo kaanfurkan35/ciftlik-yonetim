@@ -28,27 +28,43 @@ Analitik bileşenleri ve rapor sayfaları oluştur.
    - Veri yoksa EmptyState
 
 2. **API endpoint:**
+   - `auth()` + `checkPermission(session.user.role, "read", resource)` — GET dahil
    - Tarih aralığı filtresi: `?from=2024-01-01&to=2024-12-31`
+   - Tarih parametreleri doğrula: `isNaN(new Date(str).getTime())` kontrolü
    - Gruplama: `?groupBy=month|week|day`
    - Prisma aggregation kullan (`groupBy`, `_sum`, `_avg`, `_count`)
-   - Cache-Control header ekle
+   - Tenant izolasyonu: `farmId: session.user.farmId`
+   - Hata yakalama: 403 permission hatası + 500 genel hata
 
-3. **Stat Card:**
+3. **Renk Paleti (tema uyumlu — CSS değişkenleri kullan):**
+   - chart-1: Çayır yeşili (primary)
+   - chart-2: Orman yeşili (koyu)
+   - chart-3: Altın sarısı/buğday (accent)
+   - chart-4: Ahır kırmızısı (destructive)
+   - chart-5: Gökyüzü mavisi
+   - Hardcoded `hsl(...)` değerleri KULLANMA, `var(--chart-1)` vb. kullan
+
+4. **Sayı/Tarih Formatları:**
+   - `src/lib/format.ts` fonksiyonlarını kullan:
+     - `formatCurrency(amount)` — Türk Lirası formatı
+     - `formatDate(date)` — "24 Mart 2026"
+     - `formatShortDate(date)` — "24.03.2026"
+     - `formatNumber(n)` — Türkçe sayı formatı
+     - `formatPercentage(value)` — "%12,5"
+   - Tooltip'lerde ve etiketlerde bu fonksiyonları kullan
+
+5. **StatCard:**
    ```tsx
    <StatCard
      title="Toplam Hayvan"
-     value={245}
-     change={+5}
+     value={formatNumber(245)}
+     change={5}
      changeType="increase"
-     icon={<Cow />}
+     icon={<Beef className="size-5" />}
    />
    ```
-
-4. **Renk Paleti (grafikler):**
-   - Yeşil tonları: `hsl(142, 60%, 35%)` ile `hsl(142, 40%, 55%)`
-   - Amber: `hsl(38, 90%, 50%)`
-   - Kırmızı: `hsl(0, 70%, 50%)`
-   - Mavi: `hsl(210, 60%, 50%)`
+   - Artış: `text-success` (tema rengi), azalış: `text-destructive`
+   - Hardcoded yeşil/kırmızı renk KULLANMA
 
 ## Kullanım
 Rapor adı, veri kaynağı (hangi tablo/model), grafik tipi ve hesaplama mantığını iste.
