@@ -1,0 +1,861 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  WORKER
+  VIEWER
+}
+
+enum AnimalStatus {
+  ACTIVE
+  SOLD
+  DECEASED
+  DRY
+  LACTATING
+  PREGNANT
+  CALF
+}
+
+enum AnimalSex {
+  MALE
+  FEMALE
+}
+
+enum AcquisitionType {
+  BORN
+  PURCHASED
+}
+
+enum GroupType {
+  HERD
+  PEN
+  PASTURE_GROUP
+}
+
+enum HealthRecordType {
+  VET_VISIT
+  TREATMENT
+  SURGERY
+  DEWORMING
+  CHECKUP
+  OTHER
+}
+
+enum HeatIntensity {
+  WEAK
+  MODERATE
+  STRONG
+}
+
+enum InseminationType {
+  ARTIFICIAL
+  NATURAL
+}
+
+enum PregnancyResult {
+  POSITIVE
+  NEGATIVE
+  INCONCLUSIVE
+}
+
+enum MilkSession {
+  MORNING
+  EVENING
+  TOTAL
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum TransactionCategory {
+  MILK_SALE
+  ANIMAL_SALE
+  SUBSIDY
+  FEED
+  VETERINARY
+  MEDICATION
+  EQUIPMENT
+  LABOR
+  FUEL
+  UTILITIES
+  OTHER
+}
+
+enum PastureCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+}
+
+enum NotificationType {
+  VACCINATION_DUE
+  CALVING_EXPECTED
+  HEAT_PREDICTED
+  FEED_LOW
+  PAYMENT_DUE
+  TASK_ASSIGNED
+  GENERAL
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+  BACKUP
+}
+
+enum BackupType {
+  AUTOMATIC
+  MANUAL
+}
+
+enum BackupStatus {
+  SUCCESS
+  FAILED
+}
+
+// ============================================================================
+// MODELS
+// ============================================================================
+
+/// Ciftlik bilgilerini tutan ana model
+model Farm {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  name     String
+  address  String?
+  phone    String?
+  email    String?
+  logoUrl  String?
+  settings Json?
+
+  // İlişkiler
+  users               User[]
+  animals             Animal[]
+  animalGroups        AnimalGroup[]
+  vaccinationTypes    VaccinationType[]
+  medicineInventories MedicineInventory[]
+  milkSales           MilkSale[]
+  feedTypes           FeedType[]
+  transactions        Transaction[]
+  pastures            Pasture[]
+  notifications       Notification[]
+  tasks               Task[]
+  backupRecords       BackupRecord[]
+}
+
+/// Kullanici bilgilerini tutan model
+model User {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         UserRole @default(VIEWER)
+  avatarUrl    String?
+  isActive     Boolean  @default(true)
+
+  farmId String
+  farm   Farm   @relation(fields: [farmId], references: [id])
+
+  // Olusturulan kayitlar
+  createdAnimals             Animal[]             @relation("AnimalCreatedBy")
+  createdAnimalGroups        AnimalGroup[]         @relation("AnimalGroupCreatedBy")
+  createdWeightRecords       WeightRecord[]        @relation("WeightRecordCreatedBy")
+  createdVaccinationTypes    VaccinationType[]     @relation("VaccinationTypeCreatedBy")
+  createdVaccinationRecords  VaccinationRecord[]   @relation("VaccinationRecordCreatedBy")
+  administeredVaccinations   VaccinationRecord[]   @relation("VaccinationAdministeredBy")
+  createdHealthRecords       HealthRecord[]        @relation("HealthRecordCreatedBy")
+  createdMedicineInventories MedicineInventory[]   @relation("MedicineInventoryCreatedBy")
+  createdHeatRecords         HeatRecord[]          @relation("HeatRecordCreatedBy")
+  observedHeatRecords        HeatRecord[]          @relation("HeatObservedBy")
+  createdInseminationRecords InseminationRecord[]  @relation("InseminationRecordCreatedBy")
+  createdPregnancyChecks     PregnancyCheck[]      @relation("PregnancyCheckCreatedBy")
+  checkedPregnancies         PregnancyCheck[]      @relation("PregnancyCheckedBy")
+  createdCalvingRecords      CalvingRecord[]       @relation("CalvingRecordCreatedBy")
+  assistedCalvingRecords     CalvingRecord[]       @relation("CalvingAssistedBy")
+  createdMilkRecords         MilkRecord[]          @relation("MilkRecordCreatedBy")
+  createdMilkSales           MilkSale[]            @relation("MilkSaleCreatedBy")
+  createdFeedTypes           FeedType[]            @relation("FeedTypeCreatedBy")
+  createdFeedPurchases       FeedPurchase[]        @relation("FeedPurchaseCreatedBy")
+  createdFeedingRecords      FeedingRecord[]       @relation("FeedingRecordCreatedBy")
+  createdTransactions        Transaction[]         @relation("TransactionCreatedBy")
+  createdPastures            Pasture[]             @relation("PastureCreatedBy")
+  createdGrazingRecords      GrazingRecord[]       @relation("GrazingRecordCreatedBy")
+  assignedTasks              Task[]                @relation("TaskAssignedTo")
+  createdTasks               Task[]                @relation("TaskCreatedBy")
+  createdBackupRecords       BackupRecord[]        @relation("BackupRecordCreatedBy")
+
+  notifications Notification[]
+  auditLogs     AuditLog[]
+
+  @@index([farmId, deletedAt])
+}
+
+/// Hayvan bilgilerini tutan model
+model Animal {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  earTagNumber    String          @unique
+  name            String?
+  breed           String?
+  sex             AnimalSex
+  color           String?
+  dateOfBirth     DateTime?
+  dateOfDeath     DateTime?
+  deathCause      String?
+  status          AnimalStatus    @default(ACTIVE)
+  acquisitionType AcquisitionType?
+  acquisitionDate DateTime?
+  acquisitionPrice Decimal?       @db.Decimal(10, 2)
+  photoUrls       String[]
+  notes           String?
+
+  // Ana-baba iliskileri (kendi kendine referans)
+  motherId String?
+  mother   Animal?  @relation("MotherChildren", fields: [motherId], references: [id])
+  fatherId String?
+  father   Animal?  @relation("FatherChildren", fields: [fatherId], references: [id])
+
+  motherChildren Animal[] @relation("MotherChildren")
+  fatherChildren Animal[] @relation("FatherChildren")
+
+  // Grup iliskisi
+  currentGroupId String?
+  currentGroup   AnimalGroup? @relation(fields: [currentGroupId], references: [id])
+
+  // Ciftlik ve olusturan kullanici
+  farmId      String
+  farm        Farm   @relation(fields: [farmId], references: [id])
+  createdById String
+  createdBy   User   @relation("AnimalCreatedBy", fields: [createdById], references: [id])
+
+  // Iliskili kayitlar
+  groupMemberships   AnimalGroupMembership[]
+  weightRecords      WeightRecord[]
+  vaccinationRecords VaccinationRecord[]
+  healthRecords      HealthRecord[]
+  heatRecords        HeatRecord[]
+  inseminationRecords InseminationRecord[]
+  pregnancyChecks    PregnancyCheck[]
+  calvingRecordsAsMother CalvingRecord[]    @relation("CalvingMother")
+  calvingRecordsAsCalf   CalvingRecord[]    @relation("CalvingCalf")
+  milkRecords        MilkRecord[]
+  feedingRecords     FeedingRecord[]
+  transactions       Transaction[]
+
+  // Tohum bogasi olarak kullanildigi tohumlama kayitlari
+  inseminationsAsBull InseminationRecord[] @relation("InseminationBull")
+
+  @@index([farmId, deletedAt])
+  @@index([status])
+  @@index([earTagNumber])
+  @@index([motherId])
+  @@index([fatherId])
+}
+
+/// Hayvan gruplari (suru, padok, mera grubu)
+model AnimalGroup {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  name        String
+  description String?
+  type        GroupType
+
+  farmId      String
+  farm        Farm   @relation(fields: [farmId], references: [id])
+  createdById String
+  createdBy   User   @relation("AnimalGroupCreatedBy", fields: [createdById], references: [id])
+
+  // Iliskiler
+  currentAnimals Animal[]
+  memberships    AnimalGroupMembership[]
+  feedingRecords FeedingRecord[]
+  grazingRecords GrazingRecord[]
+
+  @@index([farmId, deletedAt])
+}
+
+/// Hayvanin gruba uyelik gecmisi
+model AnimalGroupMembership {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  animalId String
+  animal   Animal      @relation(fields: [animalId], references: [id])
+  groupId  String
+  group    AnimalGroup @relation(fields: [groupId], references: [id])
+
+  joinedAt DateTime  @default(now())
+  leftAt   DateTime?
+
+  @@index([animalId])
+  @@index([groupId])
+}
+
+/// Tartim kayitlari
+model WeightRecord {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  animalId String
+  animal   Animal   @relation(fields: [animalId], references: [id])
+
+  weight Decimal  @db.Decimal(10, 2)
+  date   DateTime
+  notes  String?
+
+  createdById String
+  createdBy   User   @relation("WeightRecordCreatedBy", fields: [createdById], references: [id])
+
+  @@index([animalId, date])
+}
+
+/// Asi turleri tanimi
+model VaccinationType {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  name         String
+  description  String?
+  intervalDays Int
+
+  farmId      String
+  farm        Farm   @relation(fields: [farmId], references: [id])
+  createdById String
+  createdBy   User   @relation("VaccinationTypeCreatedBy", fields: [createdById], references: [id])
+
+  vaccinationRecords VaccinationRecord[]
+
+  @@index([farmId, deletedAt])
+}
+
+/// Asilama kayitlari
+model VaccinationRecord {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  animalId          String
+  animal            Animal          @relation(fields: [animalId], references: [id])
+  vaccinationTypeId String
+  vaccinationType   VaccinationType @relation(fields: [vaccinationTypeId], references: [id])
+
+  date           DateTime
+  nextDueDate    DateTime?
+  batchNumber    String?
+  cost           Decimal?  @db.Decimal(10, 2)
+  notes          String?
+
+  administeredById String
+  administeredBy   User   @relation("VaccinationAdministeredBy", fields: [administeredById], references: [id])
+  createdById      String
+  createdBy        User   @relation("VaccinationRecordCreatedBy", fields: [createdById], references: [id])
+
+  @@index([animalId, date])
+  @@index([nextDueDate])
+}
+
+/// Saglik kayitlari (veteriner ziyareti, tedavi, ameliyat vb.)
+model HealthRecord {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  animalId String
+  animal   Animal           @relation(fields: [animalId], references: [id])
+
+  type             HealthRecordType
+  date             DateTime
+  diagnosis        String?
+  treatment        String?
+  medication       String?
+  dosage           String?
+  withdrawalEndDate DateTime?
+  vetName          String?
+  cost             Decimal?  @db.Decimal(10, 2)
+  notes            String?
+
+  createdById String
+  createdBy   User   @relation("HealthRecordCreatedBy", fields: [createdById], references: [id])
+
+  @@index([animalId, date])
+}
+
+/// Ilac envanteri
+model MedicineInventory {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  name        String
+  type        String?
+  quantity    Decimal  @db.Decimal(10, 2)
+  unit        String
+  expiryDate  DateTime?
+  batchNumber String?
+  supplier    String?
+  cost        Decimal? @db.Decimal(10, 2)
+
+  farmId      String
+  farm        Farm   @relation(fields: [farmId], references: [id])
+  createdById String
+  createdBy   User   @relation("MedicineInventoryCreatedBy", fields: [createdById], references: [id])
+
+  @@index([farmId, deletedAt])
+  @@index([expiryDate])
+}
+
+/// Kizginlik kayitlari
+model HeatRecord {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  animalId String
+  animal   Animal        @relation(fields: [animalId], references: [id])
+
+  date      DateTime
+  intensity HeatIntensity
+  notes     String?
+
+  observedById String
+  observedBy   User   @relation("HeatObservedBy", fields: [observedById], references: [id])
+  createdById  String
+  createdBy    User   @relation("HeatRecordCreatedBy", fields: [createdById], references: [id])
+
+  @@index([animalId, date])
+}
+
+/// Tohumlama kayitlari
+model InseminationRecord {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  animalId String
+  animal   Animal          @relation(fields: [animalId], references: [id])
+
+  date             DateTime
+  type             InseminationType
+  semenBatchNumber String?
+  technicianName   String?
+  cost             Decimal? @db.Decimal(10, 2)
+  notes            String?
+
+  // Doga asim icin boga referansi
+  bullId String?
+  bull   Animal? @relation("InseminationBull", fields: [bullId], references: [id])
+
+  createdById String
+  createdBy   User   @relation("InseminationRecordCreatedBy", fields: [createdById], references: [id])
+
+  pregnancyChecks PregnancyCheck[]
+
+  @@index([animalId, date])
+}
+
+/// Gebelik kontrolu kayitlari
+model PregnancyCheck {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  animalId String
+  animal   Animal          @relation(fields: [animalId], references: [id])
+
+  inseminationId String?
+  insemination   InseminationRecord? @relation(fields: [inseminationId], references: [id])
+
+  checkDate          DateTime
+  result             PregnancyResult
+  method             String?
+  expectedCalvingDate DateTime?
+  notes              String?
+
+  checkedById String
+  checkedBy   User   @relation("PregnancyCheckedBy", fields: [checkedById], references: [id])
+  createdById String
+  createdBy   User   @relation("PregnancyCheckCreatedBy", fields: [createdById], references: [id])
+
+  @@index([animalId, checkDate])
+  @@index([expectedCalvingDate])
+}
+
+/// Dogum kayitlari
+model CalvingRecord {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  animalId String
+  animal   Animal   @relation("CalvingMother", fields: [animalId], references: [id])
+
+  calfId String?
+  calf   Animal?  @relation("CalvingCalf", fields: [calfId], references: [id])
+
+  date           DateTime
+  dystociaScore  Int?
+  complications  String?
+  notes          String?
+
+  assistedById String?
+  assistedBy   User?  @relation("CalvingAssistedBy", fields: [assistedById], references: [id])
+  createdById  String
+  createdBy    User   @relation("CalvingRecordCreatedBy", fields: [createdById], references: [id])
+
+  @@index([animalId, date])
+}
+
+/// Sut olcum kayitlari
+model MilkRecord {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  animalId String
+  animal   Animal      @relation(fields: [animalId], references: [id])
+
+  date               DateTime
+  session            MilkSession
+  quantity           Decimal  @db.Decimal(10, 2)
+  fatPercentage      Float?
+  proteinPercentage  Float?
+  somaticCellCount   Int?
+  notes              String?
+
+  createdById String
+  createdBy   User   @relation("MilkRecordCreatedBy", fields: [createdById], references: [id])
+
+  @@index([animalId, date])
+  @@index([date])
+}
+
+/// Sut satis kayitlari
+model MilkSale {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  date          DateTime
+  quantity      Decimal  @db.Decimal(10, 2)
+  pricePerLiter Decimal  @db.Decimal(10, 2)
+  totalAmount   Decimal  @db.Decimal(10, 2)
+  buyerName     String?
+  invoiceNumber String?
+  notes         String?
+
+  farmId      String
+  farm        Farm   @relation(fields: [farmId], references: [id])
+  createdById String
+  createdBy   User   @relation("MilkSaleCreatedBy", fields: [createdById], references: [id])
+
+  @@index([farmId, deletedAt])
+  @@index([date])
+}
+
+/// Yem turleri tanimi
+model FeedType {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  name         String
+  unit         String
+  currentStock Decimal  @db.Decimal(10, 2)
+  minimumStock Decimal  @db.Decimal(10, 2)
+  costPerUnit  Decimal? @db.Decimal(10, 2)
+
+  farmId      String
+  farm        Farm   @relation(fields: [farmId], references: [id])
+  createdById String
+  createdBy   User   @relation("FeedTypeCreatedBy", fields: [createdById], references: [id])
+
+  feedPurchases  FeedPurchase[]
+  feedingRecords FeedingRecord[]
+
+  @@index([farmId, deletedAt])
+}
+
+/// Yem satin alma kayitlari
+model FeedPurchase {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  feedTypeId String
+  feedType   FeedType @relation(fields: [feedTypeId], references: [id])
+
+  quantity      Decimal  @db.Decimal(10, 2)
+  totalCost     Decimal  @db.Decimal(10, 2)
+  supplier      String?
+  date          DateTime
+  invoiceNumber String?
+  notes         String?
+
+  createdById String
+  createdBy   User   @relation("FeedPurchaseCreatedBy", fields: [createdById], references: [id])
+
+  @@index([feedTypeId, date])
+}
+
+/// Yemleme kayitlari
+model FeedingRecord {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  groupId  String?
+  group    AnimalGroup? @relation(fields: [groupId], references: [id])
+  animalId String?
+  animal   Animal?      @relation(fields: [animalId], references: [id])
+
+  feedTypeId String
+  feedType   FeedType @relation(fields: [feedTypeId], references: [id])
+
+  quantity Decimal  @db.Decimal(10, 2)
+  date     DateTime
+  notes    String?
+
+  createdById String
+  createdBy   User   @relation("FeedingRecordCreatedBy", fields: [createdById], references: [id])
+
+  @@index([date])
+  @@index([animalId])
+  @@index([groupId])
+}
+
+/// Finansal islem kayitlari (gelir/gider)
+model Transaction {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  type          TransactionType
+  category      TransactionCategory
+  amount        Decimal  @db.Decimal(10, 2)
+  date          DateTime
+  description   String?
+  invoiceNumber String?
+  invoiceUrl    String?
+
+  animalId String?
+  animal   Animal? @relation(fields: [animalId], references: [id])
+
+  farmId      String
+  farm        Farm   @relation(fields: [farmId], references: [id])
+  createdById String
+  createdBy   User   @relation("TransactionCreatedBy", fields: [createdById], references: [id])
+
+  @@index([farmId, deletedAt])
+  @@index([date])
+  @@index([type, category])
+}
+
+/// Mera/otlak bilgileri
+model Pasture {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  name           String
+  sizeDekar      Decimal          @db.Decimal(10, 2)
+  capacity       Int
+  condition      PastureCondition
+  hasWaterSource Boolean          @default(false)
+  notes          String?
+
+  farmId      String
+  farm        Farm   @relation(fields: [farmId], references: [id])
+  createdById String
+  createdBy   User   @relation("PastureCreatedBy", fields: [createdById], references: [id])
+
+  grazingRecords GrazingRecord[]
+
+  @@index([farmId, deletedAt])
+}
+
+/// Otlatma kayitlari
+model GrazingRecord {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  pastureId String
+  pasture   Pasture     @relation(fields: [pastureId], references: [id])
+  groupId   String
+  group     AnimalGroup @relation(fields: [groupId], references: [id])
+
+  startDate DateTime
+  endDate   DateTime?
+  notes     String?
+
+  createdById String
+  createdBy   User   @relation("GrazingRecordCreatedBy", fields: [createdById], references: [id])
+
+  @@index([pastureId])
+  @@index([groupId])
+  @@index([startDate])
+}
+
+/// Bildirim kayitlari
+model Notification {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  userId String
+  user   User             @relation(fields: [userId], references: [id])
+
+  type              NotificationType
+  title             String
+  message           String
+  isRead            Boolean   @default(false)
+  readAt            DateTime?
+  relatedEntityId   String?
+  relatedEntityType String?
+
+  farmId String
+  farm   Farm   @relation(fields: [farmId], references: [id])
+
+  @@index([farmId, deletedAt])
+  @@index([userId, isRead])
+}
+
+/// Gorev yonetimi
+model Task {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  title       String
+  description String?
+  status      TaskStatus   @default(PENDING)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  assignedToId String
+  assignedTo   User   @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
+
+  farmId      String
+  farm        Farm   @relation(fields: [farmId], references: [id])
+  createdById String
+  createdBy   User   @relation("TaskCreatedBy", fields: [createdById], references: [id])
+
+  @@index([farmId, deletedAt])
+  @@index([assignedToId, status])
+  @@index([dueDate])
+}
+
+/// Denetim/log kayitlari (soft delete yok)
+model AuditLog {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User        @relation(fields: [userId], references: [id])
+
+  action     AuditAction
+  entityType String
+  entityId   String?
+  changes    Json?
+  ipAddress  String?
+  timestamp  DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([timestamp])
+}
+
+/// Yedekleme kayitlari
+model BackupRecord {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  filename  String
+  sizeBytes BigInt
+  type      BackupType
+  status    BackupStatus
+
+  farmId      String
+  farm        Farm    @relation(fields: [farmId], references: [id])
+  createdById String?
+  createdBy   User?   @relation("BackupRecordCreatedBy", fields: [createdById], references: [id])
+
+  @@index([farmId, deletedAt])
+}
