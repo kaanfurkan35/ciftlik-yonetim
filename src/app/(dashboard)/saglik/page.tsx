@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Plus, Heart, Syringe, AlertTriangle } from "lucide-react"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { PageHeader } from "@/components/shared/page-header"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -7,24 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { HEALTH_RECORD_TYPE_LABELS } from "@/lib/constants"
-
-function formatDate(date: Date | null | undefined): string {
-  if (!date) return "-"
-  return new Intl.DateTimeFormat("tr-TR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date)
-}
-
-function formatCurrency(value: unknown): string {
-  if (value == null) return "-"
-  const num = typeof value === "number" ? value : Number(value)
-  return new Intl.NumberFormat("tr-TR", {
-    style: "currency",
-    currency: "TRY",
-  }).format(num)
-}
+import { formatShortDate, formatCurrency } from "@/lib/format"
 
 function isOverdue(nextDueDate: Date | null | undefined): boolean {
   if (!nextDueDate) return false
@@ -32,16 +17,19 @@ function isOverdue(nextDueDate: Date | null | undefined): boolean {
 }
 
 export default async function SaglikPage() {
+  const session = await auth()
+  if (!session?.user) redirect("/login")
+
   const [healthRecords, vaccinationRecords] = await Promise.all([
     prisma.healthRecord.findMany({
-      where: { deletedAt: null },
+      where: { deletedAt: null, animal: { farmId: session.user.farmId } },
       include: {
         animal: { select: { id: true, name: true, earTagNumber: true } },
       },
       orderBy: { date: "desc" },
     }),
     prisma.vaccinationRecord.findMany({
-      where: { deletedAt: null },
+      where: { deletedAt: null, animal: { farmId: session.user.farmId } },
       include: {
         animal: { select: { id: true, name: true, earTagNumber: true } },
         vaccinationType: { select: { id: true, name: true, intervalDays: true } },
@@ -161,12 +149,12 @@ export default async function SaglikPage() {
                             {HEALTH_RECORD_TYPE_LABELS[record.type] ?? record.type}
                           </Badge>
                         </td>
-                        <td className="p-4">{formatDate(new Date(record.date))}</td>
+                        <td className="p-4">{formatShortDate(record.date)}</td>
                         <td className="p-4">{record.diagnosis || "-"}</td>
                         <td className="p-4">{record.treatment || "-"}</td>
                         <td className="p-4">{record.medication || "-"}</td>
                         <td className="p-4">{record.vetName || "-"}</td>
-                        <td className="p-4">{formatCurrency(record.cost)}</td>
+                        <td className="p-4">{record.cost != null ? formatCurrency(record.cost) : "-"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -224,16 +212,16 @@ export default async function SaglikPage() {
                           </Link>
                         </td>
                         <td className="p-4">{record.vaccinationTypeName}</td>
-                        <td className="p-4">{formatDate(new Date(record.date))}</td>
+                        <td className="p-4">{formatShortDate(record.date)}</td>
                         <td className="p-4">
                           {record.nextDueDate
-                            ? formatDate(new Date(record.nextDueDate))
+                            ? formatShortDate(record.nextDueDate)
                             : "-"}
                         </td>
                         <td className="p-4 font-mono text-xs">
                           {record.batchNumber || "-"}
                         </td>
-                        <td className="p-4">{formatCurrency(record.cost)}</td>
+                        <td className="p-4">{record.cost != null ? formatCurrency(record.cost) : "-"}</td>
                         <td className="p-4">
                           {record.isOverdue ? (
                             <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">

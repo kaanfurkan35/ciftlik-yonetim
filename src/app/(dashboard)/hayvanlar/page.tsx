@@ -1,5 +1,7 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { Plus, Beef } from "lucide-react"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { PageHeader } from "@/components/shared/page-header"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -7,25 +9,26 @@ import { Button } from "@/components/ui/button"
 import { AnimalListClient } from "@/components/animals/animal-list-client"
 
 export default async function HayvanlarPage() {
+  const session = await auth()
+  if (!session?.user) redirect("/login")
+
   const animals = await prisma.animal.findMany({
-    where: { deletedAt: null },
-    include: {
-      mother: { select: { id: true, name: true, earTagNumber: true } },
-      father: { select: { id: true, name: true, earTagNumber: true } },
+    where: { farmId: session.user.farmId, deletedAt: null },
+    select: {
+      id: true,
+      earTagNumber: true,
+      name: true,
+      breed: true,
+      sex: true,
+      status: true,
+      dateOfBirth: true,
     },
     orderBy: { createdAt: "desc" },
   })
 
-  const serializedAnimals = animals.map((animal) => ({
-    id: animal.id,
-    earTagNumber: animal.earTagNumber,
-    name: animal.name,
-    breed: animal.breed,
-    sex: animal.sex,
-    status: animal.status,
-    dateOfBirth: animal.dateOfBirth?.toISOString() ?? null,
-    motherName: animal.mother?.name ?? animal.mother?.earTagNumber ?? null,
-    fatherName: animal.father?.name ?? animal.father?.earTagNumber ?? null,
+  const serializedAnimals = animals.map((a) => ({
+    ...a,
+    dateOfBirth: a.dateOfBirth?.toISOString() ?? null,
   }))
 
   return (

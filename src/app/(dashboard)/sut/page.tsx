@@ -18,14 +18,8 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select"
 import { MILK_SESSION_LABELS } from "@/lib/constants"
+import { formatShortDate, formatCurrency } from "@/lib/format"
 
 interface MilkRecord {
   id: string
@@ -61,19 +55,8 @@ interface Stats {
   totalSalesRevenue: number
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("tr-TR")
-}
-
 function formatNumber(value: string | number, decimals = 1) {
   return Number(value).toFixed(decimals)
-}
-
-function formatCurrency(value: string | number) {
-  return Number(value).toLocaleString("tr-TR", {
-    style: "currency",
-    currency: "TRY",
-  })
 }
 
 export default function SutPage() {
@@ -220,7 +203,7 @@ export default function SutPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">
-                Bugünkü Kayıtlar ({formatDate(new Date().toISOString())})
+                Bugünkü Kayıtlar ({formatShortDate(new Date().toISOString())})
               </h3>
               <div className="text-sm text-muted-foreground">
                 Toplam: <span className="font-bold text-foreground">{formatNumber(stats.todayTotal)} L</span>
@@ -297,17 +280,16 @@ export default function SutPage() {
             <div className="flex flex-wrap items-end gap-3">
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Sağım Zamanı</label>
-                <Select value={filterSession} onValueChange={(v) => setFilterSession(v ?? "")}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Tümü" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Tümü</SelectItem>
-                    <SelectItem value="MORNING">Sabah</SelectItem>
-                    <SelectItem value="EVENING">Akşam</SelectItem>
-                    <SelectItem value="TOTAL">Toplam</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+                  value={filterSession}
+                  onChange={(e) => setFilterSession(e.target.value)}
+                  className="h-9 w-[140px] cursor-pointer rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                >
+                  <option value="ALL">Tümü</option>
+                  <option value="MORNING">Sabah</option>
+                  <option value="EVENING">Akşam</option>
+                  <option value="TOTAL">Toplam</option>
+                </select>
               </div>
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Başlangıç</label>
@@ -362,7 +344,7 @@ export default function SutPage() {
                   <TableBody>
                     {records.map((record) => (
                       <TableRow key={record.id}>
-                        <TableCell>{formatDate(record.date)}</TableCell>
+                        <TableCell>{formatShortDate(record.date)}</TableCell>
                         <TableCell className="font-medium">
                           {record.animal.name || "-"}
                         </TableCell>
@@ -442,7 +424,7 @@ export default function SutPage() {
                   <TableBody>
                     {sales.map((sale) => (
                       <TableRow key={sale.id}>
-                        <TableCell>{formatDate(sale.date)}</TableCell>
+                        <TableCell>{formatShortDate(sale.date)}</TableCell>
                         <TableCell className="font-medium">
                           {sale.buyerName || "-"}
                         </TableCell>
@@ -450,10 +432,10 @@ export default function SutPage() {
                           {formatNumber(sale.quantity)}
                         </TableCell>
                         <TableCell className="text-right">
-                          {formatCurrency(sale.pricePerLiter)}
+                          {formatCurrency(Number(sale.pricePerLiter) || 0)}
                         </TableCell>
                         <TableCell className="text-right font-semibold">
-                          {formatCurrency(sale.totalAmount)}
+                          {formatCurrency(Number(sale.totalAmount) || 0)}
                         </TableCell>
                         <TableCell className="font-mono text-sm">
                           {sale.invoiceNumber || "-"}

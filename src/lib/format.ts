@@ -62,3 +62,18 @@ export function formatPercentage(value: number): string {
     maximumFractionDigits: 1,
   }).format(value)}`;
 }
+
+export function formatAge(dateOfBirth: Date | string | null | undefined): string {
+  if (!dateOfBirth) return "-";
+  const birth = typeof dateOfBirth === "string" ? new Date(dateOfBirth) : dateOfBirth;
+  const now = new Date();
+  const diffMs = now.getTime() - birth.getTime();
+  const totalMonths = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.44));
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+  if (years > 0 && months > 0) return `${years} yıl ${months} ay`;
+  if (years > 0) return `${years} yıl`;
+  if (months > 0) return `${months} ay`;
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return `${days} gün`;
+}

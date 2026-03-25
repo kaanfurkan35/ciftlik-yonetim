@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import {
   ColumnDef,
   SortingState,
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -36,7 +37,9 @@ export function DataTable<TData, TValue>({
   searchPlaceholder = "Ara...",
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
-  const [globalFilter, setGlobalFilter] = useState("")
+  const [searchInput, setSearchInput] = useState("")
+  const debouncedSearch = useDebouncedValue(searchInput, 300)
+  const handleGlobalFilterChange = useCallback((v: string) => setSearchInput(v), [])
 
   const table = useReactTable({
     data,
@@ -49,12 +52,10 @@ export function DataTable<TData, TValue>({
     state: {
       sorting,
       ...(searchKey
-        ? { columnFilters: globalFilter ? [{ id: searchKey, value: globalFilter }] : [] }
-        : { globalFilter }),
+        ? { columnFilters: debouncedSearch ? [{ id: searchKey, value: debouncedSearch }] : [] }
+        : { globalFilter: debouncedSearch }),
     },
-    ...(searchKey
-      ? {}
-      : { onGlobalFilterChange: setGlobalFilter }),
+    ...(searchKey ? {} : { onGlobalFilterChange: handleGlobalFilterChange }),
   })
 
   return (
@@ -63,29 +64,19 @@ export function DataTable<TData, TValue>({
         <div className="flex items-center">
           <Input
             placeholder={searchPlaceholder}
-            value={
-              searchKey
-                ? (table.getColumn(searchKey)?.getFilterValue() as string) ?? ""
-                : globalFilter
-            }
-            onChange={(e) => {
-              if (searchKey) {
-                table.getColumn(searchKey)?.setFilterValue(e.target.value)
-              } else {
-                setGlobalFilter(e.target.value)
-              }
-            }}
-            className="max-w-sm"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="max-w-sm h-9"
           />
         </div>
       )}
-      <div className="rounded-lg border">
+      <div className="overflow-x-auto rounded-lg border">
         <Table aria-label="Veri tablosu">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="text-sm">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -105,7 +96,7 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="text-sm">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -118,7 +109,7 @@ export function DataTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-24 text-center text-sm"
                   aria-live="polite"
                 >
                   Kayıt bulunamadı.

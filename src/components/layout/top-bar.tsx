@@ -115,14 +115,16 @@ export function TopBar({ user, notificationCount = 0 }: TopBarProps) {
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" side="bottom" sideOffset={8}>
-            <DropdownMenuLabel>
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium">{user.name}</span>
-                <span className="text-xs text-muted-foreground">
-                  {user.email}
-                </span>
-              </div>
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium">{user.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {user.email}
+                  </span>
+                </div>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem render={<Link href="/ayarlar" />}>

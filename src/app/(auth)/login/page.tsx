@@ -76,19 +76,17 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="w-full border-0 shadow-xl shadow-black/5 dark:shadow-black/30">
+    <Card className="w-full border border-border/50 bg-card/90 shadow-2xl backdrop-blur-xl">
       <CardHeader className="space-y-4 pb-2 text-center">
-        {/* Farm icon */}
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-green-600 shadow-lg shadow-green-500/25">
-          <Tractor className="h-8 w-8 text-white" />
+        <div className="mx-auto flex size-14 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25">
+          <Tractor className="size-7 text-primary-foreground" />
         </div>
 
-        {/* App name */}
         <div className="space-y-1">
-          <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Çiftlik Yönetim
+          <CardTitle className="text-xl font-bold tracking-tight">
+            Ümmet Ali Oğulları
           </CardTitle>
-          <CardDescription className="text-sm text-gray-500 dark:text-gray-400">
+          <CardDescription className="text-sm">
             Çiftlik Yönetim Sistemi
           </CardDescription>
         </div>
@@ -96,76 +94,72 @@ export default function LoginPage() {
 
       <CardContent className="pt-4">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          {/* Error alert */}
           {error && (
-            <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800/50 dark:bg-red-950/50">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
-              <p className="text-sm font-medium text-red-600 dark:text-red-400">
+            <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3">
+              <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" />
+              <p className="text-sm font-medium text-destructive">
                 {error}
               </p>
             </div>
           )}
 
-          {/* Email field */}
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium">
               E-posta Adresi
             </Label>
             <div className="relative">
-              <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="email"
                 type="email"
                 placeholder="ornek@ciftlik.com"
                 autoComplete="email"
-                className="pl-10"
+                className="h-10 pl-10"
                 {...register("email")}
               />
             </div>
             {errors.email && (
-              <p className="text-xs font-medium text-red-500">
+              <p className="text-xs font-medium text-destructive">
                 {errors.email.message}
               </p>
             )}
           </div>
 
-          {/* Password field */}
           <div className="space-y-2">
             <Label htmlFor="password" className="text-sm font-medium">
               Şifre
             </Label>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 autoComplete="current-password"
-                className="pl-10 pr-10"
+                className="h-10 pl-10 pr-10"
                 {...register("password")}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                 tabIndex={-1}
                 aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
               >
                 {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff className="size-4" />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className="size-4" />
                 )}
               </button>
             </div>
             {errors.password && (
-              <p className="text-xs font-medium text-red-500">
+              <p className="text-xs font-medium text-destructive">
                 {errors.password.message}
               </p>
             )}
           </div>
 
-          {/* Submit button */}
           <Button
             type="submit"
             size="lg"
@@ -174,7 +168,7 @@ export default function LoginPage() {
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="size-4 animate-spin" />
                 Giriş yapılıyor...
               </>
             ) : (
@@ -183,8 +177,7 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        {/* Footer */}
-        <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">
+        <p className="mt-6 text-center text-xs text-muted-foreground">
           Çiftlik yönetim sisteminize hoş geldiniz
         </p>
       </CardContent>

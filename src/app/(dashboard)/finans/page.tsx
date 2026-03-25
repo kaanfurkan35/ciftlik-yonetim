@@ -26,26 +26,11 @@ import {
   TRANSACTION_TYPE_LABELS,
   TRANSACTION_CATEGORY_LABELS,
 } from "@/lib/constants"
+import { formatCurrency, formatShortDate } from "@/lib/format"
 
 // ============================================================================
 // Yardımcı fonksiyonlar
 // ============================================================================
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("tr-TR", {
-    style: "currency",
-    currency: "TRY",
-    minimumFractionDigits: 2,
-  }).format(value)
-}
-
-function formatDate(date: string): string {
-  return new Intl.DateTimeFormat("tr-TR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(new Date(date))
-}
 
 function formatMonthLabel(yearMonth: string): string {
   const [year, month] = yearMonth.split("-")
@@ -141,7 +126,7 @@ function TransactionTable({
         <tbody>
           {transactions.map((tx) => (
             <tr key={tx.id} className="border-b last:border-0">
-              <td className="py-2 pr-4 whitespace-nowrap">{formatDate(tx.date)}</td>
+              <td className="py-2 pr-4 whitespace-nowrap">{formatShortDate(tx.date)}</td>
               <td className="py-2 pr-4">
                 <Badge
                   className={

@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react"
 import { ArrowDown, ArrowUp } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
 interface StatCardProps {
@@ -12,6 +12,7 @@ interface StatCardProps {
   changeType?: "increase" | "decrease"
   icon: ReactNode
   className?: string
+  borderColor?: string
 }
 
 export function StatCard({
@@ -21,34 +22,35 @@ export function StatCard({
   changeType,
   icon,
   className,
+  borderColor = "border-l-primary",
 }: StatCardProps) {
   return (
-    <Card className={cn(className)}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-        <div className="text-muted-foreground">{icon}</div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {change !== undefined && changeType && (
-          <div
-            className={cn(
-              "mt-1 flex items-center gap-1 text-xs",
-              changeType === "increase"
-                ? "text-success"
-                : "text-destructive"
+    <Card className={cn("border-l-[3px] shadow-sm transition-shadow hover:shadow-md cursor-pointer", borderColor, className)}>
+      <CardContent className="pt-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {title}
+            </p>
+            <p className="mt-1 text-2xl font-bold">{value}</p>
+            {change !== undefined && (
+              <div
+                className={cn(
+                  "mt-1 flex items-center gap-1 text-xs font-medium",
+                  change >= 0 ? "text-success" : "text-destructive"
+                )}
+              >
+                {change >= 0 ? (
+                  <ArrowUp className="size-3" />
+                ) : (
+                  <ArrowDown className="size-3" />
+                )}
+                <span>{change >= 0 ? "+" : ""}{change}% geçen ay</span>
+              </div>
             )}
-          >
-            {changeType === "increase" ? (
-              <ArrowUp className="size-3" />
-            ) : (
-              <ArrowDown className="size-3" />
-            )}
-            <span>%{change} geçen aya göre</span>
           </div>
-        )}
+          <div className="rounded-lg bg-muted p-2 text-muted-foreground">{icon}</div>
+        </div>
       </CardContent>
     </Card>
   )

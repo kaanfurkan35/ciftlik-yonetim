@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Plus, Heart, Syringe, Baby, Stethoscope, CalendarClock } from "lucide-react"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { PageHeader } from "@/components/shared/page-header"
 import { StatCard } from "@/components/shared/stat-card"
@@ -13,24 +15,7 @@ import {
   PREGNANCY_RESULT_LABELS,
   GESTATION_DAYS,
 } from "@/lib/constants"
-
-function formatDate(date: Date | null | undefined): string {
-  if (!date) return "-"
-  return new Intl.DateTimeFormat("tr-TR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date)
-}
-
-function formatCurrency(value: unknown): string {
-  if (value == null) return "-"
-  const num = typeof value === "number" ? value : Number(value)
-  return new Intl.NumberFormat("tr-TR", {
-    style: "currency",
-    currency: "TRY",
-  }).format(num)
-}
+import { formatShortDate, formatCurrency } from "@/lib/format"
 
 const HEAT_INTENSITY_COLORS: Record<string, string> = {
   WEAK: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
@@ -45,6 +30,9 @@ const PREGNANCY_RESULT_COLORS: Record<string, string> = {
 }
 
 export default async function UremePage() {
+  const session = await auth()
+  if (!session?.user) redirect("/login")
+
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
   const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
@@ -61,12 +49,13 @@ export default async function UremePage() {
   ] = await Promise.all([
     // Gebe hayvan sayısı
     prisma.animal.count({
-      where: { status: "PREGNANT", deletedAt: null },
+      where: { farmId: session.user.farmId, status: "PREGNANT", deletedAt: null },
     }),
     // Yaklaşan doğumlar (30 gün içinde)
     prisma.pregnancyCheck.count({
       where: {
         deletedAt: null,
+        animal: { farmId: session.user.farmId },
         result: "POSITIVE",
         expectedCalvingDate: {
           gte: now,
@@ -78,12 +67,13 @@ export default async function UremePage() {
     prisma.inseminationRecord.count({
       where: {
         deletedAt: null,
+        animal: { farmId: session.user.farmId },
         date: { gte: startOfMonth },
       },
     }),
     // Son kızgınlık kayıtları
     prisma.heatRecord.findMany({
-      where: { deletedAt: null },
+      where: { deletedAt: null, animal: { farmId: session.user.farmId } },
       orderBy: { date: "desc" },
       take: 20,
       include: {
@@ -93,7 +83,7 @@ export default async function UremePage() {
     }),
     // Son tohumlama kayıtları
     prisma.inseminationRecord.findMany({
-      where: { deletedAt: null },
+      where: { deletedAt: null, animal: { farmId: session.user.farmId } },
       orderBy: { date: "desc" },
       take: 20,
       include: {
@@ -103,7 +93,7 @@ export default async function UremePage() {
     }),
     // Son gebelik kontrolleri
     prisma.pregnancyCheck.findMany({
-      where: { deletedAt: null },
+      where: { deletedAt: null, animal: { farmId: session.user.farmId } },
       orderBy: { checkDate: "desc" },
       take: 20,
       include: {
@@ -113,7 +103,7 @@ export default async function UremePage() {
     }),
     // Son doğum kayıtları
     prisma.calvingRecord.findMany({
-      where: { deletedAt: null },
+      where: { deletedAt: null, animal: { farmId: session.user.farmId } },
       orderBy: { date: "desc" },
       take: 20,
       include: {
@@ -201,7 +191,7 @@ export default async function UremePage() {
                               {record.animal.name || record.animal.earTagNumber}
                             </Link>
                           </td>
-                          <td className="py-2 pr-4">{formatDate(record.date)}</td>
+                          <td className="py-2 pr-4">{formatShortDate(record.date)}</td>
                           <td className="py-2 pr-4">
                             <Badge className={HEAT_INTENSITY_COLORS[record.intensity] ?? ""}>
                               {HEAT_INTENSITY_LABELS[record.intensity] ?? record.intensity}
@@ -261,7 +251,7 @@ export default async function UremePage() {
                               {record.animal.name || record.animal.earTagNumber}
                             </Link>
                           </td>
-                          <td className="py-2 pr-4">{formatDate(record.date)}</td>
+                          <td className="py-2 pr-4">{formatShortDate(record.date)}</td>
                           <td className="py-2 pr-4">
                             {INSEMINATION_TYPE_LABELS[record.type] ?? record.type}
                           </td>
@@ -271,7 +261,7 @@ export default async function UremePage() {
                               : record.semenBatchNumber || "-"}
                           </td>
                           <td className="py-2 pr-4">{record.technicianName || "-"}</td>
-                          <td className="py-2">{formatCurrency(record.cost)}</td>
+                          <td className="py-2">{record.cost != null ? formatCurrency(Number(record.cost)) : "-"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -324,14 +314,14 @@ export default async function UremePage() {
                               {record.animal.name || record.animal.earTagNumber}
                             </Link>
                           </td>
-                          <td className="py-2 pr-4">{formatDate(record.checkDate)}</td>
+                          <td className="py-2 pr-4">{formatShortDate(record.checkDate)}</td>
                           <td className="py-2 pr-4">
                             <Badge className={PREGNANCY_RESULT_COLORS[record.result] ?? ""}>
                               {PREGNANCY_RESULT_LABELS[record.result] ?? record.result}
                             </Badge>
                           </td>
                           <td className="py-2 pr-4">{record.method || "-"}</td>
-                          <td className="py-2 pr-4">{formatDate(record.expectedCalvingDate)}</td>
+                          <td className="py-2 pr-4">{record.expectedCalvingDate ? formatShortDate(record.expectedCalvingDate) : "-"}</td>
                           <td className="py-2">{record.checkedBy?.name ?? "-"}</td>
                         </tr>
                       ))}
@@ -385,7 +375,7 @@ export default async function UremePage() {
                               {record.animal.name || record.animal.earTagNumber}
                             </Link>
                           </td>
-                          <td className="py-2 pr-4">{formatDate(record.date)}</td>
+                          <td className="py-2 pr-4">{formatShortDate(record.date)}</td>
                           <td className="py-2 pr-4">
                             {record.calf ? (
                               <Link

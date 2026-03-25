@@ -1,20 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Fira_Sans, Fira_Code } from "next/font/google";
+import { DM_Sans, Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const firaSans = Fira_Sans({
+const dmSans = DM_Sans({
   variable: "--font-sans",
   subsets: ["latin", "latin-ext"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
   fallback: ["system-ui", "Arial", "sans-serif"],
 });
 
-const firaCode = Fira_Code({
+const inter = Inter({
   variable: "--font-geist-mono",
   subsets: ["latin", "latin-ext"],
   display: "swap",
@@ -39,8 +39,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#2d6b3f" },
-    { media: "(prefers-color-scheme: dark)", color: "#1a3328" },
+    { media: "(prefers-color-scheme: light)", color: "#4a6741" },
+    { media: "(prefers-color-scheme: dark)", color: "#1a1c18" },
   ],
 };
 
@@ -52,7 +52,8 @@ export default function RootLayout({
   return (
     <html
       lang="tr"
-      className={`${firaSans.variable} ${firaCode.variable} h-full`}
+      className={`${dmSans.variable} ${inter.variable} h-full`}
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <head>

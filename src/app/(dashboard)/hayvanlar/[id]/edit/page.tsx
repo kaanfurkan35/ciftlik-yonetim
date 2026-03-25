@@ -27,8 +27,8 @@ export default function HayvanDuzenlePage() {
         if (!response.ok) {
           throw new Error("Hayvan bilgileri yüklenemedi")
         }
-        const data = await response.json()
-        setAnimal(data)
+        const json = await response.json()
+        setAnimal(json.data ?? json)
       } catch (error) {
         toast.error("Hayvan bilgileri yüklenirken bir hata oluştu")
         router.push("/hayvanlar")

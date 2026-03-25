@@ -30,18 +30,7 @@ import {
 import { PageHeader } from "@/components/shared/page-header"
 import { StatCard } from "@/components/shared/stat-card"
 import { ExportButtons } from "./export-buttons"
-
-// ============================================================================
-// Yardımcı fonksiyonlar
-// ============================================================================
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("tr-TR", {
-    style: "currency",
-    currency: "TRY",
-    minimumFractionDigits: 2,
-  }).format(value)
-}
+import { formatCurrency } from "@/lib/format"
 
 // ============================================================================
 // Veri yükleme fonksiyonları
@@ -304,7 +293,7 @@ export default async function RaporlarPage() {
                   title="Toplam Hayvan"
                   value={herd.total}
                   icon={<BarChart3 className="size-4" />}
-                  className="border-l-4 border-l-blue-500"
+                  className="border-l-4 border-l-primary"
                 />
                 {Object.entries(herd.byStatus).map(([status, count]) => (
                   <Card key={status}>
@@ -407,19 +396,19 @@ export default async function RaporlarPage() {
                 title="Toplam Süt (Son 6 Ay)"
                 value={`${milk.totalMilk.toLocaleString("tr-TR")} lt`}
                 icon={<Milk className="size-4" />}
-                className="border-l-4 border-l-emerald-500"
+                className="border-l-4 border-l-success"
               />
               <StatCard
                 title="Sağımlak Hayvan"
                 value={milk.lactatingCount}
                 icon={<Users className="size-4" />}
-                className="border-l-4 border-l-blue-500"
+                className="border-l-4 border-l-primary"
               />
               <StatCard
                 title="Ortalama Günlük"
                 value={`${milk.lactatingCount > 0 ? Math.round((milk.totalMilk / 180) * 100) / 100 : 0} lt`}
                 icon={<BarChart3 className="size-4" />}
-                className="border-l-4 border-l-purple-500"
+                className="border-l-4 border-l-accent"
               />
             </div>
 
@@ -515,19 +504,19 @@ export default async function RaporlarPage() {
                 title="Toplam Gelir"
                 value={formatCurrency(finance.totalIncome)}
                 icon={<Wallet className="size-4" />}
-                className="border-l-4 border-l-green-500"
+                className="border-l-4 border-l-success"
               />
               <StatCard
                 title="Toplam Gider"
                 value={formatCurrency(finance.totalExpense)}
                 icon={<Wallet className="size-4" />}
-                className="border-l-4 border-l-red-500"
+                className="border-l-4 border-l-destructive"
               />
               <StatCard
                 title="Kar / Zarar"
                 value={formatCurrency(finance.profit)}
                 icon={<BarChart3 className="size-4" />}
-                className={`border-l-4 ${finance.profit >= 0 ? "border-l-green-500" : "border-l-red-500"}`}
+                className={`border-l-4 ${finance.profit >= 0 ? "border-l-success" : "border-l-destructive"}`}
               />
             </div>
 
@@ -555,7 +544,7 @@ export default async function RaporlarPage() {
                             <TableCell className="font-medium">
                               {TRANSACTION_CATEGORY_LABELS[item.category] || item.category}
                             </TableCell>
-                            <TableCell className="text-right text-green-600 dark:text-green-400">
+                            <TableCell className="text-right text-success">
                               {formatCurrency(item.total)}
                             </TableCell>
                             <TableCell className="text-right">
@@ -596,7 +585,7 @@ export default async function RaporlarPage() {
                             <TableCell className="font-medium">
                               {TRANSACTION_CATEGORY_LABELS[item.category] || item.category}
                             </TableCell>
-                            <TableCell className="text-right text-red-600 dark:text-red-400">
+                            <TableCell className="text-right text-destructive">
                               {formatCurrency(item.total)}
                             </TableCell>
                             <TableCell className="text-right">
@@ -627,25 +616,25 @@ export default async function RaporlarPage() {
                 title="Toplam Aşı Kaydı"
                 value={health.totalVaccinations}
                 icon={<ShieldCheck className="size-4" />}
-                className="border-l-4 border-l-blue-500"
+                className="border-l-4 border-l-primary"
               />
               <StatCard
                 title="Yaklaşan Aşılar (30 Gün)"
                 value={health.upcomingVaccinations}
                 icon={<ShieldCheck className="size-4" />}
-                className="border-l-4 border-l-yellow-500"
+                className="border-l-4 border-l-warning"
               />
               <StatCard
                 title="Geciken Aşılar"
                 value={health.overdueVaccinations}
                 icon={<ShieldCheck className="size-4" />}
-                className="border-l-4 border-l-red-500"
+                className="border-l-4 border-l-destructive"
               />
               <StatCard
                 title="Son 3 Ay Sağlık Kaydı"
                 value={health.recentHealthRecords}
                 icon={<ShieldCheck className="size-4" />}
-                className="border-l-4 border-l-green-500"
+                className="border-l-4 border-l-success"
               />
             </div>
 
@@ -664,13 +653,13 @@ export default async function RaporlarPage() {
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span>Zamanında yapılan aşılar</span>
-                    <span className="font-medium text-green-600 dark:text-green-400">
+                    <span className="font-medium text-success">
                       {health.totalVaccinations - health.overdueVaccinations}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span>Geciken aşılar</span>
-                    <span className="font-medium text-red-600 dark:text-red-400">
+                    <span className="font-medium text-destructive">
                       {health.overdueVaccinations}
                     </span>
                   </div>
@@ -689,7 +678,7 @@ export default async function RaporlarPage() {
                       </div>
                       <div className="h-2 w-full rounded-full bg-muted">
                         <div
-                          className="h-2 rounded-full bg-green-500"
+                          className="h-2 rounded-full bg-success"
                           style={{
                             width: `${Math.min(
                               ((health.totalVaccinations - health.overdueVaccinations) /

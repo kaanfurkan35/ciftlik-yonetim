@@ -21,13 +21,6 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 
 interface Notification {
   id: string
@@ -219,19 +212,18 @@ export default function BildirimlerPage() {
 
       {/* Filtre */}
       <div className="flex items-center gap-3">
-        <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "ALL")}>
-          <SelectTrigger>
-            <SelectValue placeholder="Tür seçin" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">Tümü</SelectItem>
-            {Object.entries(NOTIFICATION_TYPE_LABELS).map(([value, label]) => (
-              <SelectItem key={value} value={value}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="h-9 cursor-pointer rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          <option value="ALL">Tümü</option>
+          {Object.entries(NOTIFICATION_TYPE_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
         {unreadCount > 0 && (
           <Badge variant="destructive">{unreadCount} okunmamış</Badge>
         )}

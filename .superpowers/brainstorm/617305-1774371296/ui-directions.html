@@ -1,0 +1,231 @@
+<h2>Çiftlik Yönetim — UI Yönü Seç</h2>
+<p class="subtitle">3 farklı tasarım yönü. Dashboard mockup'larını karşılaştır ve birini seç.</p>
+
+<div class="cards">
+  <!-- OPTION A: Neon Ranch -->
+  <div class="card" data-choice="neon-ranch" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;overflow:hidden;">
+      <div style="background:#0a1a10;color:#e0e0e0;padding:16px;font-family:'Fira Sans',sans-serif;font-size:11px;line-height:1.5;min-height:340px;">
+        <!-- Sidebar -->
+        <div style="display:flex;gap:12px;">
+          <div style="width:48px;background:#0f2418;border-radius:8px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:10px;">
+            <div style="width:28px;height:28px;background:#00e676;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#0a1a10;">🐄</div>
+            <div style="width:24px;height:24px;background:#1a3a22;border-radius:4px;border-left:2px solid #00e676;"></div>
+            <div style="width:24px;height:24px;background:transparent;border-radius:4px;opacity:0.5;border:1px solid #1a3a22;"></div>
+            <div style="width:24px;height:24px;background:transparent;border-radius:4px;opacity:0.5;border:1px solid #1a3a22;"></div>
+            <div style="width:24px;height:24px;background:transparent;border-radius:4px;opacity:0.5;border:1px solid #1a3a22;"></div>
+          </div>
+          <!-- Main content -->
+          <div style="flex:1;">
+            <!-- Hero -->
+            <div style="background:linear-gradient(135deg,#0f2a18,#1a3a22);border:1px solid rgba(0,230,118,0.15);border-radius:10px;padding:12px;margin-bottom:10px;box-shadow:0 0 20px rgba(0,230,118,0.08);">
+              <div style="display:flex;justify-content:space-between;">
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#fff;">Sürü Genel Bakışı</div>
+                  <div style="font-size:9px;color:#66bb6a;margin-top:2px;">Sağlık, operasyon ve verimlilik</div>
+                  <div style="display:flex;gap:4px;margin-top:8px;">
+                    <span style="background:rgba(0,230,118,0.12);border:1px solid rgba(0,230,118,0.2);border-radius:4px;padding:2px 6px;font-size:8px;color:#00e676;">%98 Sağlık</span>
+                    <span style="background:rgba(0,230,118,0.12);border:1px solid rgba(0,230,118,0.2);border-radius:4px;padding:2px 6px;font-size:8px;color:#00e676;">20 Lt/Gün</span>
+                  </div>
+                  <div style="margin-top:8px;background:#00e676;color:#0a1a10;padding:4px 10px;border-radius:5px;font-size:9px;font-weight:600;display:inline-block;">Sürü Bakışı →</div>
+                </div>
+                <div style="width:60px;height:60px;background:rgba(0,230,118,0.05);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;">🐄</div>
+              </div>
+              <div style="height:3px;background:rgba(0,230,118,0.1);border-radius:2px;margin-top:8px;"><div style="height:100%;width:98%;background:linear-gradient(90deg,rgba(0,230,118,0.4),#00e676);border-radius:2px;"></div></div>
+            </div>
+            <!-- Stats -->
+            <div style="display:flex;gap:8px;margin-bottom:10px;">
+              <div style="flex:1;background:#142e1c;border:1px solid rgba(0,230,118,0.08);border-radius:8px;padding:8px;">
+                <div style="font-size:8px;color:#66bb6a;">Toplam Sığır</div>
+                <div style="font-size:18px;font-weight:700;color:#fff;">350</div>
+                <div style="font-size:7px;color:#00e676;">+3.5% ▲</div>
+              </div>
+              <div style="flex:1;background:#142e1c;border:1px solid rgba(0,230,118,0.08);border-radius:8px;padding:8px;">
+                <div style="font-size:8px;color:#66bb6a;">Günlük Süt</div>
+                <div style="font-size:18px;font-weight:700;color:#fff;">7,000 Lt</div>
+                <div style="font-size:7px;color:#00e676;">+2.1% ▲</div>
+              </div>
+              <div style="flex:1;background:#142e1c;border:1px solid rgba(0,230,118,0.08);border-radius:8px;padding:8px;">
+                <div style="font-size:8px;color:#66bb6a;">Aylık Gelir</div>
+                <div style="font-size:18px;font-weight:700;color:#fff;">₺420K</div>
+                <div style="font-size:7px;color:#00e676;">+4.8% ▲</div>
+              </div>
+            </div>
+            <!-- Quick Actions -->
+            <div style="display:flex;gap:6px;margin-bottom:10px;">
+              <div style="flex:1;background:#1a3a22;border:1px solid rgba(0,230,118,0.1);border-radius:6px;padding:6px;text-align:center;font-size:8px;color:#b2dfdb;">+Hayvan</div>
+              <div style="flex:1;background:#1a3a22;border:1px solid rgba(0,230,118,0.1);border-radius:6px;padding:6px;text-align:center;font-size:8px;color:#b2dfdb;">+Süt</div>
+              <div style="flex:1;background:#1a3a22;border:1px solid rgba(0,230,118,0.1);border-radius:6px;padding:6px;text-align:center;font-size:8px;color:#b2dfdb;">+Aşı</div>
+              <div style="flex:1;background:#1a3a22;border:1px solid rgba(0,230,118,0.1);border-radius:6px;padding:6px;text-align:center;font-size:8px;color:#b2dfdb;">+Görev</div>
+            </div>
+            <!-- Live Monitor -->
+            <div style="font-size:9px;font-weight:600;color:#aaa;margin-bottom:4px;">Canlı İzleme</div>
+            <div style="display:flex;gap:6px;overflow:hidden;">
+              <div style="min-width:90px;background:#142e1c;border:1px solid rgba(0,230,118,0.08);border-radius:6px;padding:6px;">
+                <div style="display:flex;align-items:center;gap:3px;"><span style="width:5px;height:5px;border-radius:50%;background:#f44336;"></span><span style="font-size:8px;font-weight:600;">Ahır 2</span></div>
+                <div style="font-size:7px;color:#888;margin-top:2px;">Sıcaklık Uyarısı</div>
+              </div>
+              <div style="min-width:90px;background:#142e1c;border:1px solid rgba(0,230,118,0.08);border-radius:6px;padding:6px;">
+                <div style="display:flex;align-items:center;gap:3px;"><span style="width:5px;height:5px;border-radius:50%;background:#00e676;"></span><span style="font-size:8px;font-weight:600;">Buzağı</span></div>
+                <div style="font-size:7px;color:#888;margin-top:2px;">Yeni Doğum</div>
+              </div>
+              <div style="min-width:90px;background:#142e1c;border:1px solid rgba(0,230,118,0.08);border-radius:6px;padding:6px;">
+                <div style="display:flex;align-items:center;gap:3px;"><span style="width:5px;height:5px;border-radius:50%;background:#ff9800;"></span><span style="font-size:8px;font-weight:600;">Yemleme</span></div>
+                <div style="font-size:7px;color:#888;margin-top:2px;">Başladı</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Neon Ranch</h3>
+      <p>Mevcut dark tema korunur + polish. Neon yeşil + koyu arka plan. Hızlı erişim butonları ve haftalık grafik eklenir. <strong>En az değişiklik, en hızlı.</strong></p>
+    </div>
+  </div>
+
+  <!-- OPTION B: Modern Farm -->
+  <div class="card" data-choice="modern-farm" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;overflow:hidden;">
+      <div style="background:#faf8f4;color:#2d2a26;padding:16px;font-family:'DM Sans',sans-serif;font-size:11px;line-height:1.5;min-height:340px;">
+        <div style="display:flex;gap:12px;">
+          <!-- Sidebar -->
+          <div style="width:110px;background:#f0ece4;border-radius:10px;padding:10px;">
+            <div style="font-size:11px;font-weight:700;color:#3d5a3e;margin-bottom:10px;">🌿 Yeşilova</div>
+            <div style="background:#3d5a3e;color:white;border-radius:6px;padding:5px 8px;font-size:9px;font-weight:600;margin-bottom:4px;">Dashboard</div>
+            <div style="padding:5px 8px;font-size:9px;color:#6b6560;margin-bottom:2px;">Hayvanlar</div>
+            <div style="padding:5px 8px;font-size:9px;color:#6b6560;margin-bottom:2px;">Sağlık</div>
+            <div style="padding:5px 8px;font-size:9px;color:#6b6560;margin-bottom:2px;">Üreme</div>
+            <div style="padding:5px 8px;font-size:9px;color:#6b6560;margin-bottom:2px;">Süt Verimi</div>
+            <div style="padding:5px 8px;font-size:9px;color:#6b6560;margin-bottom:2px;">Finans</div>
+          </div>
+          <!-- Main -->
+          <div style="flex:1;">
+            <div style="font-size:16px;font-weight:700;color:#2d2a26;">Günaydın, Ahmet 👋</div>
+            <div style="font-size:9px;color:#8a8580;margin-bottom:12px;">24 Mart 2026 · Bolu · ☀️ 18°C</div>
+            <!-- Stats -->
+            <div style="display:flex;gap:8px;margin-bottom:10px;">
+              <div style="flex:1;background:white;border-radius:8px;padding:10px;border-left:3px solid #3d5a3e;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                <div style="font-size:8px;color:#8a8580;text-transform:uppercase;letter-spacing:0.5px;">Toplam Sığır</div>
+                <div style="font-size:20px;font-weight:700;color:#2d2a26;">350</div>
+                <div style="font-size:7px;color:#3d5a3e;">+3.5% ▲</div>
+              </div>
+              <div style="flex:1;background:white;border-radius:8px;padding:10px;border-left:3px solid #7cb342;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                <div style="font-size:8px;color:#8a8580;text-transform:uppercase;letter-spacing:0.5px;">Günlük Süt</div>
+                <div style="font-size:20px;font-weight:700;color:#2d2a26;">7,000 Lt</div>
+                <div style="font-size:7px;color:#7cb342;">+2.1% ▲</div>
+              </div>
+              <div style="flex:1;background:white;border-radius:8px;padding:10px;border-left:3px solid #c17c3e;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                <div style="font-size:8px;color:#8a8580;text-transform:uppercase;letter-spacing:0.5px;">Aylık Gelir</div>
+                <div style="font-size:20px;font-weight:700;color:#2d2a26;">₺420K</div>
+                <div style="font-size:7px;color:#c17c3e;">+4.8% ▲</div>
+              </div>
+            </div>
+            <!-- Two columns -->
+            <div style="display:flex;gap:8px;margin-bottom:10px;">
+              <div style="flex:1;background:white;border-radius:8px;padding:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                <div style="font-size:10px;font-weight:700;margin-bottom:6px;">📋 Bugünkü Görevler</div>
+                <div style="display:flex;align-items:center;gap:4px;font-size:8px;margin-bottom:3px;"><span style="width:10px;height:10px;border:1.5px solid #3d5a3e;border-radius:2px;"></span>Aşı — TR-045</div>
+                <div style="display:flex;align-items:center;gap:4px;font-size:8px;margin-bottom:3px;"><span style="width:10px;height:10px;border:1.5px solid #3d5a3e;border-radius:2px;"></span>Yemleme kontrolü</div>
+                <div style="display:flex;align-items:center;gap:4px;font-size:8px;"><span style="width:10px;height:10px;background:#3d5a3e;border-radius:2px;"></span><span style="text-decoration:line-through;color:#aaa;">Süt kaydı</span></div>
+              </div>
+              <div style="flex:1;background:white;border-radius:8px;padding:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                <div style="font-size:10px;font-weight:700;margin-bottom:6px;">⏱ Son Olaylar</div>
+                <div style="font-size:8px;margin-bottom:3px;"><span style="color:#3d5a3e;">●</span> Yeni doğum — 14:30</div>
+                <div style="font-size:8px;margin-bottom:3px;"><span style="color:#7cb342;">●</span> Süt kaydı — 12:00</div>
+                <div style="font-size:8px;"><span style="color:#c17c3e;">●</span> Stok uyarısı — 09:15</div>
+              </div>
+            </div>
+            <!-- Chart placeholder -->
+            <div style="background:white;border-radius:8px;padding:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+              <div style="font-size:9px;font-weight:700;margin-bottom:6px;">Haftalık Süt Üretimi</div>
+              <div style="display:flex;align-items:flex-end;gap:4px;height:40px;">
+                <div style="flex:1;background:linear-gradient(180deg,#7cb342,#a5d6a7);border-radius:3px 3px 0 0;height:60%;"></div>
+                <div style="flex:1;background:linear-gradient(180deg,#7cb342,#a5d6a7);border-radius:3px 3px 0 0;height:75%;"></div>
+                <div style="flex:1;background:linear-gradient(180deg,#7cb342,#a5d6a7);border-radius:3px 3px 0 0;height:65%;"></div>
+                <div style="flex:1;background:linear-gradient(180deg,#7cb342,#a5d6a7);border-radius:3px 3px 0 0;height:85%;"></div>
+                <div style="flex:1;background:linear-gradient(180deg,#7cb342,#a5d6a7);border-radius:3px 3px 0 0;height:90%;"></div>
+                <div style="flex:1;background:linear-gradient(180deg,#7cb342,#a5d6a7);border-radius:3px 3px 0 0;height:80%;"></div>
+                <div style="flex:1;background:linear-gradient(180deg,#3d5a3e,#7cb342);border-radius:3px 3px 0 0;height:100%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Modern Farm</h3>
+      <p>Açık tema, sıcak krem arka plan. Zeytin yeşili + terracotta. Notion/Stripe hissi. Görev listesi + timeline. <strong>En kullanıcı dostu.</strong></p>
+    </div>
+  </div>
+
+  <!-- OPTION C: Precision Agriculture -->
+  <div class="card" data-choice="precision-agriculture" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;overflow:hidden;">
+      <div style="background:#080e1a;color:#c8d6e5;padding:16px;font-family:'IBM Plex Sans',monospace;font-size:11px;line-height:1.5;min-height:340px;">
+        <div style="display:flex;gap:12px;">
+          <!-- Sidebar -->
+          <div style="width:36px;display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:4px;">
+            <div style="width:28px;height:28px;background:linear-gradient(135deg,#2979ff,#1565c0);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;">📊</div>
+            <div style="width:24px;height:2px;background:#2979ff;border-radius:1px;"></div>
+            <div style="width:20px;height:20px;opacity:0.4;">📋</div>
+            <div style="width:20px;height:20px;opacity:0.4;">💉</div>
+            <div style="width:20px;height:20px;opacity:0.4;">🥛</div>
+            <div style="width:20px;height:20px;opacity:0.4;">💰</div>
+          </div>
+          <!-- Main -->
+          <div style="flex:1;">
+            <!-- KPI Row -->
+            <div style="display:flex;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(41,121,255,0.15);">
+              <div style="flex:1;">
+                <div style="font-size:28px;font-weight:700;color:#fff;letter-spacing:-1px;">350</div>
+                <div style="font-size:7px;text-transform:uppercase;letter-spacing:1px;color:#5c7cfa;">SIĞIR</div>
+                <div style="font-size:8px;color:#2979ff;margin-top:2px;">+3.5% ▲</div>
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:28px;font-weight:700;color:#fff;letter-spacing:-1px;">7,000<span style="font-size:14px;color:#5c7cfa;">Lt</span></div>
+                <div style="font-size:7px;text-transform:uppercase;letter-spacing:1px;color:#5c7cfa;">SÜT/GÜN</div>
+                <div style="font-size:8px;color:#2979ff;margin-top:2px;">+2.1% ▲</div>
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:28px;font-weight:700;color:#fff;letter-spacing:-1px;">₺420K</div>
+                <div style="font-size:7px;text-transform:uppercase;letter-spacing:1px;color:#5c7cfa;">GELİR</div>
+                <div style="font-size:8px;color:#ffd54f;margin-top:2px;">+4.8% ▲</div>
+              </div>
+            </div>
+            <!-- Two columns -->
+            <div style="display:flex;gap:8px;margin-bottom:10px;">
+              <!-- Donut -->
+              <div style="flex:1;background:#0d1526;border:1px solid rgba(41,121,255,0.12);border-radius:8px;padding:10px;">
+                <div style="font-size:9px;font-weight:600;color:#5c7cfa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Sürü Sağlığı</div>
+                <div style="width:60px;height:60px;border-radius:50%;border:4px solid #2979ff;border-top-color:#1b5e20;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;">
+                  <span style="font-size:14px;font-weight:700;color:#fff;">98%</span>
+                </div>
+                <div style="font-size:7px;color:#7986cb;">Aktif: 280 · Gebe: 45 · Kuru: 25</div>
+              </div>
+              <!-- Alerts -->
+              <div style="flex:1;background:#0d1526;border:1px solid rgba(41,121,255,0.12);border-radius:8px;padding:10px;">
+                <div style="font-size:9px;font-weight:600;color:#5c7cfa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Uyarılar</div>
+                <div style="font-size:8px;margin-bottom:4px;padding:3px 0;border-bottom:1px solid rgba(41,121,255,0.06);"><span style="color:#f44336;">⚠</span> Ahır 2 Sıcaklık</div>
+                <div style="font-size:8px;margin-bottom:4px;padding:3px 0;border-bottom:1px solid rgba(41,121,255,0.06);"><span style="color:#ff9800;">⚠</span> Yem stok düşük</div>
+                <div style="font-size:8px;padding:3px 0;"><span style="color:#4caf50;">✓</span> Yeni doğum</div>
+              </div>
+            </div>
+            <!-- Table -->
+            <div style="background:#0d1526;border:1px solid rgba(41,121,255,0.12);border-radius:8px;padding:8px;overflow:hidden;">
+              <div style="font-size:9px;font-weight:600;color:#5c7cfa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Son Aktiviteler</div>
+              <div style="font-size:7px;display:flex;padding:3px 0;border-bottom:1px solid rgba(41,121,255,0.08);color:#5c7cfa;font-weight:600;"><span style="flex:1;">TARİH</span><span style="flex:1;">TÜR</span><span style="flex:1;">HAYVAN</span><span style="flex:0.5;">DURUM</span></div>
+              <div style="font-size:8px;display:flex;padding:4px 0;border-bottom:1px solid rgba(41,121,255,0.05);"><span style="flex:1;">24.03</span><span style="flex:1;">Aşı</span><span style="flex:1;">TR-045</span><span style="flex:0.5;color:#4caf50;">OK</span></div>
+              <div style="font-size:8px;display:flex;padding:4px 0;border-bottom:1px solid rgba(41,121,255,0.05);background:rgba(41,121,255,0.03);"><span style="flex:1;">24.03</span><span style="flex:1;">Doğum</span><span style="flex:1;">TR-102</span><span style="flex:0.5;color:#4caf50;">OK</span></div>
+              <div style="font-size:8px;display:flex;padding:4px 0;"><span style="flex:1;">23.03</span><span style="flex:1;">Muayene</span><span style="flex:1;">TR-078</span><span style="flex:0.5;color:#ff9800;">⏳</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Precision Agriculture</h3>
+      <p>Bloomberg Terminal tarzı. Koyu lacivert + elektrik mavi. Büyük KPI sayıları, donut chart, zebra tablo. <strong>En profesyonel, veri yoğun.</strong></p>
+    </div>
+  </div>
+</div>

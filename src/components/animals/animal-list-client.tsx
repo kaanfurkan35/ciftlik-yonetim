@@ -1,19 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ColumnDef } from "@tanstack/react-table"
-import {
-  MoreHorizontal,
-  Eye,
-  Pencil,
-  Trash2,
-} from "lucide-react"
+import { MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react"
 import { toast } from "sonner"
-import { DataTable } from "@/components/shared/data-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { NativeSelect } from "@/components/ui/native-select"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,19 +17,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { ConfirmDialog } from "@/components/shared/confirm-dialog"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import {
   ANIMAL_STATUS_LABELS,
   ANIMAL_STATUS_COLORS,
   ANIMAL_SEX_LABELS,
 } from "@/lib/constants"
+import { formatAge } from "@/lib/format"
 
 interface AnimalRow {
   id: string
@@ -43,94 +41,43 @@ interface AnimalRow {
   sex: string
   status: string
   dateOfBirth: string | null
-  motherName: string | null
-  fatherName: string | null
 }
 
-function calculateAge(dateOfBirth: string | null): string {
-  if (!dateOfBirth) return "-"
-  const birth = new Date(dateOfBirth)
-  const now = new Date()
-  const diffMs = now.getTime() - birth.getTime()
-  const totalMonths = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.44))
-  const years = Math.floor(totalMonths / 12)
-  const months = totalMonths % 12
-  if (years > 0 && months > 0) return `${years} yıl ${months} ay`
-  if (years > 0) return `${years} yıl`
-  if (months > 0) return `${months} ay`
-  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-  return `${days} gün`
+interface AnimalListClientProps {
+  animals: AnimalRow[]
 }
 
-const columns: ColumnDef<AnimalRow>[] = [
-  {
-    accessorKey: "earTagNumber",
-    header: "Kulak No",
-    cell: ({ row }) => (
-      <Link
-        href={`/hayvanlar/${row.original.id}`}
-        className="font-bold font-mono hover:underline"
-      >
-        {row.original.earTagNumber}
-      </Link>
-    ),
-  },
-  {
-    accessorKey: "name",
-    header: "İsim",
-    cell: ({ row }) => row.original.name || "-",
-  },
-  {
-    accessorKey: "breed",
-    header: "Irk",
-    cell: ({ row }) => row.original.breed || "-",
-  },
-  {
-    accessorKey: "sex",
-    header: "Cinsiyet",
-    cell: ({ row }) => ANIMAL_SEX_LABELS[row.original.sex] ?? row.original.sex,
-  },
-  {
-    accessorKey: "status",
-    header: "Durum",
-    cell: ({ row }) => {
-      const status = row.original.status
-      return (
-        <Badge
-          className={ANIMAL_STATUS_COLORS[status] ?? ""}
-        >
-          {ANIMAL_STATUS_LABELS[status] ?? status}
-        </Badge>
-      )
-    },
-  },
-  {
-    id: "age",
-    header: "Yaş",
-    cell: ({ row }) => calculateAge(row.original.dateOfBirth),
-  },
-  {
-    id: "actions",
-    header: "İşlemler",
-    cell: ({ row }) => <ActionsCell animal={row.original} />,
-  },
-]
-
-function ActionsCell({ animal }: { animal: AnimalRow }) {
+export function AnimalListClient({ animals }: AnimalListClientProps) {
   const router = useRouter()
-  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [statusFilter, setStatusFilter] = useState("ALL")
+  const [search, setSearch] = useState("")
+  const [deleteTarget, setDeleteTarget] = useState<AnimalRow | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  const filtered = useMemo(() => {
+    let result = animals
+    if (statusFilter !== "ALL") {
+      result = result.filter((a) => a.status === statusFilter)
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      result = result.filter(
+        (a) =>
+          a.earTagNumber.toLowerCase().includes(q) ||
+          (a.name && a.name.toLowerCase().includes(q))
+      )
+    }
+    return result
+  }, [animals, statusFilter, search])
+
   async function handleDelete() {
+    if (!deleteTarget) return
     setIsDeleting(true)
     try {
-      const res = await fetch(`/api/animals/${animal.id}`, {
-        method: "DELETE",
-      })
-      if (!res.ok) {
-        throw new Error("Silme işlemi başarısız oldu")
-      }
+      const res = await fetch(`/api/animals/${deleteTarget.id}`, { method: "DELETE" })
+      if (!res.ok) throw new Error()
       toast.success("Hayvan başarıyla silindi")
+      setDeleteTarget(null)
       router.refresh()
     } catch {
       toast.error("Hayvan silinirken bir hata oluştu")
@@ -140,92 +87,108 @@ function ActionsCell({ animal }: { animal: AnimalRow }) {
   }
 
   return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button variant="ghost" size="icon-sm">
-              <MoreHorizontal className="size-4" />
-              <span className="sr-only">İşlemler</span>
-            </Button>
-          }
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Input
+          placeholder="Kulak no veya isim ara..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-xs"
         />
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() => router.push(`/hayvanlar/${animal.id}`)}
+        <div className="flex items-center gap-2">
+          <Label htmlFor="sf" className="text-sm text-muted-foreground">Durum:</Label>
+          <NativeSelect
+            id="sf"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
           >
-            <Eye className="size-4" />
-            Detay
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => router.push(`/hayvanlar/${animal.id}/duzenle`)}
-          >
-            <Pencil className="size-4" />
-            Düzenle
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => setDeleteOpen(true)}
-          >
-            <Trash2 className="size-4" />
-            Sil
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <option value="ALL">Tüm Durumlar</option>
+            {Object.entries(ANIMAL_STATUS_LABELS).map(([k, v]) => (
+              <option key={k} value={k}>{v}</option>
+            ))}
+          </NativeSelect>
+        </div>
+        <span className="text-sm text-muted-foreground">{filtered.length} hayvan</span>
+      </div>
 
+      {/* Table */}
+      <div className="overflow-x-auto rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Kulak No</TableHead>
+              <TableHead>İsim</TableHead>
+              <TableHead>Irk</TableHead>
+              <TableHead>Cinsiyet</TableHead>
+              <TableHead>Durum</TableHead>
+              <TableHead>Yaş</TableHead>
+              <TableHead className="w-12" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                  Kayıt bulunamadı.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((animal) => (
+                <TableRow key={animal.id} className="cursor-pointer hover:bg-muted/50" onClick={() => router.push(`/hayvanlar/${animal.id}`)}>
+                  <TableCell>
+                    <Link href={`/hayvanlar/${animal.id}`} className="font-mono font-bold text-sm hover:text-primary" onClick={(e) => e.stopPropagation()}>
+                      {animal.earTagNumber}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-sm">{animal.name || "-"}</TableCell>
+                  <TableCell className="text-sm">{animal.breed || "-"}</TableCell>
+                  <TableCell className="text-sm">{ANIMAL_SEX_LABELS[animal.sex] ?? animal.sex}</TableCell>
+                  <TableCell>
+                    <Badge className={ANIMAL_STATUS_COLORS[animal.status] ?? ""}>
+                      {ANIMAL_STATUS_LABELS[animal.status] ?? animal.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm">{formatAge(animal.dateOfBirth)}</TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger render={
+                        <Button variant="ghost" size="icon-sm">
+                          <MoreHorizontal className="size-4" />
+                          <span className="sr-only">İşlemler</span>
+                        </Button>
+                      } />
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => router.push(`/hayvanlar/${animal.id}`)}>
+                          <Eye className="size-4" /> Detay
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push(`/hayvanlar/${animal.id}/edit`)}>
+                          <Pencil className="size-4" /> Düzenle
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(animal)}>
+                          <Trash2 className="size-4" /> Sil
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Single shared delete dialog */}
       <ConfirmDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
         title="Hayvanı Sil"
-        description={`"${animal.name || animal.earTagNumber}" adlı hayvanı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`}
+        description={`"${deleteTarget?.name || deleteTarget?.earTagNumber}" adlı hayvanı silmek istediğinizden emin misiniz?`}
         onConfirm={handleDelete}
         confirmText={isDeleting ? "Siliniyor..." : "Sil"}
         cancelText="İptal"
         variant="destructive"
-      />
-    </>
-  )
-}
-
-interface AnimalListClientProps {
-  animals: AnimalRow[]
-}
-
-export function AnimalListClient({ animals }: AnimalListClientProps) {
-  const [statusFilter, setStatusFilter] = useState<string>("ALL")
-
-  const filteredAnimals =
-    statusFilter === "ALL"
-      ? animals
-      : animals.filter((a) => a.status === statusFilter)
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Select
-          value={statusFilter}
-          onValueChange={(val) => setStatusFilter(val as string)}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Durum Filtrele" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">Tüm Durumlar</SelectItem>
-            {Object.entries(ANIMAL_STATUS_LABELS).map(([key, label]) => (
-              <SelectItem key={key} value={key}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <DataTable
-        columns={columns}
-        data={filteredAnimals}
-        searchKey="earTagNumber"
-        searchPlaceholder="Kulak numarasına göre ara..."
       />
     </div>
   )

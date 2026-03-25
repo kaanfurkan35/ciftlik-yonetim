@@ -64,10 +64,10 @@ async function main() {
 
   const farm = await prisma.farm.create({
     data: {
-      name: "Yesilova Ciftligi",
-      address: "Yesilova Koyu, Bolu",
+      name: "Ümmet Ali Oğulları Çiftliği",
+      address: "Bolu",
       phone: "+90 374 555 1234",
-      email: "info@yesilova.com",
+      email: "info@ummetaliciftlik.com",
       settings: {
         currency: "TRY",
         language: "tr",

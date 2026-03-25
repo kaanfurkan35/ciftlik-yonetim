@@ -16,11 +16,22 @@ npx prisma db seed   # Seed database (prisma/seed.ts)
 npx prisma studio    # Visual database browser
 ```
 
+No test framework is configured. There are no test files in the project.
+
+## Environment
+
+Required env vars (validated by `src/lib/env.ts` via Zod):
+- `DATABASE_URL` — PostgreSQL connection string
+- `AUTH_SECRET` — NextAuth secret (min 32 chars)
+- `NEXTAUTH_URL` — App URL (optional, defaults to localhost)
+
 ## Architecture
 
 **Turkish-language cattle farm management system** (Çiftlik Yönetim) — multi-tenant SaaS with RBAC.
 
-**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · PostgreSQL · Prisma 6 · NextAuth v5 (JWT + Credentials) · TailwindCSS v4 · shadcn/ui (@base-ui/react) · Zustand · TanStack Query + Table · React Hook Form + Zod · Recharts
+**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · PostgreSQL · Prisma 6 · NextAuth v5 (JWT + Credentials) · TailwindCSS v4 · shadcn/ui (@base-ui/react) · Zustand · TanStack Query + Table · React Hook Form + Zod 4 · Recharts · date-fns
+
+**Path alias:** `@/*` → `./src/*`
 
 ### Route Groups
 
@@ -86,6 +97,18 @@ Server component `page.tsx` fetches initial data → renders client component `*
 
 Organic Biophilic farm theme — earth green + harvest gold. OKLCH color space. All status colors use CSS variables (success, destructive, primary, accent) — **never hardcode Tailwind color classes**.
 
+### Security
+
+- `src/proxy.ts` — Next.js 16 proxy (replaces middleware.ts): auth check + CSRF validation (Origin/Referer) on all POST/PATCH/DELETE API requests except `/api/auth`
+- `next.config.ts` — CSP, HSTS, X-Frame-Options: DENY, nosniff, strict referrer policy
+- Login rate limiting: 5 attempts per 15 minutes per email (in-memory sliding window)
+
 ### All UI text is in Turkish
 
 Labels and constants are in `src/lib/constants.ts`. Use `src/lib/format.ts` for dates, currency, and numbers. The app locale is `tr`.
+
+### Key Version Notes
+
+- **Zod 4** (not v3) — API differences from training data; check imports and method signatures
+- **Next.js 16** — `params` are async Promises; proxy.ts replaces middleware.ts
+- **shadcn/ui** uses `@base-ui/react` (not Radix) — Button requires `nativeButton={false}` when using `render` prop

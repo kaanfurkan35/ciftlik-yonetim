@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Plus, Wheat, AlertTriangle, ShoppingCart, ClipboardList } from "lucide-react"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { PageHeader } from "@/components/shared/page-header"
 import { Button } from "@/components/ui/button"
@@ -15,17 +17,21 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { FEED_UNIT_LABELS } from "@/lib/constants"
+import { formatShortDate, formatCurrency, formatNumber } from "@/lib/format"
 
 export default async function BeslemePage() {
+  const session = await auth()
+  if (!session?.user) redirect("/login")
+
   // Yem türleri
   const feedTypes = await prisma.feedType.findMany({
-    where: { deletedAt: null },
+    where: { farmId: session.user.farmId, deletedAt: null },
     orderBy: { name: "asc" },
   })
 
   // Son satın alma kayıtları
   const purchases = await prisma.feedPurchase.findMany({
-    where: { deletedAt: null },
+    where: { deletedAt: null, feedType: { farmId: session.user.farmId } },
     include: {
       feedType: { select: { id: true, name: true, unit: true } },
     },
@@ -35,7 +41,7 @@ export default async function BeslemePage() {
 
   // Son yemleme kayıtları
   const feedingRecords = await prisma.feedingRecord.findMany({
-    where: { deletedAt: null },
+    where: { deletedAt: null, feedType: { farmId: session.user.farmId } },
     include: {
       feedType: { select: { id: true, name: true, unit: true } },
       animal: { select: { id: true, name: true, earTagNumber: true } },
@@ -121,10 +127,7 @@ export default async function BeslemePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {monthlyExpense.toLocaleString("tr-TR", {
-                style: "currency",
-                currency: "TRY",
-              })}
+              {formatCurrency(monthlyExpense)}
             </div>
           </CardContent>
         </Card>
@@ -187,17 +190,14 @@ export default async function BeslemePage() {
                               isLowStock ? "font-bold text-red-600 dark:text-red-400" : ""
                             }`}
                           >
-                            {Number(ft.currentStock).toLocaleString("tr-TR")}
+                            {formatNumber(Number(ft.currentStock))}
                           </TableCell>
                           <TableCell className="text-right">
-                            {Number(ft.minimumStock).toLocaleString("tr-TR")}
+                            {formatNumber(Number(ft.minimumStock))}
                           </TableCell>
                           <TableCell className="text-right">
                             {ft.costPerUnit
-                              ? Number(ft.costPerUnit).toLocaleString("tr-TR", {
-                                  style: "currency",
-                                  currency: "TRY",
-                                })
+                              ? formatCurrency(Number(ft.costPerUnit))
                               : "-"}
                           </TableCell>
                           <TableCell>
@@ -255,20 +255,17 @@ export default async function BeslemePage() {
                     {purchases.map((p) => (
                       <TableRow key={p.id}>
                         <TableCell>
-                          {new Date(p.date).toLocaleDateString("tr-TR")}
+                          {formatShortDate(p.date)}
                         </TableCell>
                         <TableCell className="font-medium">
                           {p.feedType.name}
                         </TableCell>
                         <TableCell className="text-right">
-                          {Number(p.quantity).toLocaleString("tr-TR")}{" "}
+                          {formatNumber(Number(p.quantity))}{" "}
                           {FEED_UNIT_LABELS[p.feedType.unit] || p.feedType.unit}
                         </TableCell>
                         <TableCell className="text-right">
-                          {Number(p.totalCost).toLocaleString("tr-TR", {
-                            style: "currency",
-                            currency: "TRY",
-                          })}
+                          {formatCurrency(Number(p.totalCost))}
                         </TableCell>
                         <TableCell>{p.supplier || "-"}</TableCell>
                         <TableCell>{p.invoiceNumber || "-"}</TableCell>
@@ -315,13 +312,13 @@ export default async function BeslemePage() {
                     {feedingRecords.map((r) => (
                       <TableRow key={r.id}>
                         <TableCell>
-                          {new Date(r.date).toLocaleDateString("tr-TR")}
+                          {formatShortDate(r.date)}
                         </TableCell>
                         <TableCell className="font-medium">
                           {r.feedType.name}
                         </TableCell>
                         <TableCell className="text-right">
-                          {Number(r.quantity).toLocaleString("tr-TR")}{" "}
+                          {formatNumber(Number(r.quantity))}{" "}
                           {FEED_UNIT_LABELS[r.feedType.unit] || r.feedType.unit}
                         </TableCell>
                         <TableCell>

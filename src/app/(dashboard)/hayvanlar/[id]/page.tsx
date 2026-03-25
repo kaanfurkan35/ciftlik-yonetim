@@ -27,38 +27,7 @@ import {
   HEALTH_RECORD_TYPE_LABELS,
   MILK_SESSION_LABELS,
 } from "@/lib/constants"
-
-function formatDate(date: Date | null | undefined): string {
-  if (!date) return "-"
-  return new Intl.DateTimeFormat("tr-TR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date)
-}
-
-function calculateAge(dateOfBirth: Date | null | undefined): string {
-  if (!dateOfBirth) return "-"
-  const now = new Date()
-  const diffMs = now.getTime() - dateOfBirth.getTime()
-  const totalMonths = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.44))
-  const years = Math.floor(totalMonths / 12)
-  const months = totalMonths % 12
-  if (years > 0 && months > 0) return `${years} yıl ${months} ay`
-  if (years > 0) return `${years} yıl`
-  if (months > 0) return `${months} ay`
-  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-  return `${days} gün`
-}
-
-function formatCurrency(value: unknown): string {
-  if (value == null) return "-"
-  const num = typeof value === "number" ? value : Number(value)
-  return new Intl.NumberFormat("tr-TR", {
-    style: "currency",
-    currency: "TRY",
-  }).format(num)
-}
+import { formatShortDate, formatCurrency, formatAge } from "@/lib/format"
 
 interface DetailItemProps {
   icon?: React.ReactNode
@@ -177,7 +146,7 @@ export default async function HayvanDetayPage({
                 {animal.breed && <span>{animal.breed}</span>}
                 <span>{ANIMAL_SEX_LABELS[animal.sex] ?? animal.sex}</span>
                 {animal.dateOfBirth && (
-                  <span>{calculateAge(animal.dateOfBirth)}</span>
+                  <span>{formatAge(animal.dateOfBirth)}</span>
                 )}
               </div>
             </div>
@@ -220,7 +189,7 @@ export default async function HayvanDetayPage({
                 <DetailItem
                   icon={<Calendar className="size-4" />}
                   label="Doğum Tarihi"
-                  value={formatDate(animal.dateOfBirth)}
+                  value={animal.dateOfBirth ? formatShortDate(animal.dateOfBirth) : "-"}
                 />
                 <DetailItem
                   icon={<Tag className="size-4" />}
@@ -257,12 +226,12 @@ export default async function HayvanDetayPage({
                 <DetailItem
                   icon={<Calendar className="size-4" />}
                   label="Edinme Tarihi"
-                  value={formatDate(animal.acquisitionDate)}
+                  value={animal.acquisitionDate ? formatShortDate(animal.acquisitionDate) : "-"}
                 />
                 <DetailItem
                   icon={<Tag className="size-4" />}
                   label="Edinme Fiyatı"
-                  value={formatCurrency(animal.acquisitionPrice)}
+                  value={animal.acquisitionPrice != null ? formatCurrency(Number(animal.acquisitionPrice)) : "-"}
                 />
               </CardContent>
             </Card>
@@ -349,7 +318,7 @@ export default async function HayvanDetayPage({
                     <tbody>
                       {animal.healthRecords.map((record) => (
                         <tr key={record.id} className="border-b last:border-0">
-                          <td className="py-2 pr-4">{formatDate(record.date)}</td>
+                          <td className="py-2 pr-4">{formatShortDate(record.date)}</td>
                           <td className="py-2 pr-4">
                             {HEALTH_RECORD_TYPE_LABELS[record.type] ?? record.type}
                           </td>
@@ -395,7 +364,7 @@ export default async function HayvanDetayPage({
                     <tbody>
                       {animal.milkRecords.map((record) => (
                         <tr key={record.id} className="border-b last:border-0">
-                          <td className="py-2 pr-4">{formatDate(record.date)}</td>
+                          <td className="py-2 pr-4">{formatShortDate(record.date)}</td>
                           <td className="py-2 pr-4">
                             {MILK_SESSION_LABELS[record.session] ?? record.session}
                           </td>
@@ -447,7 +416,7 @@ export default async function HayvanDetayPage({
                     <tbody>
                       {animal.weightRecords.map((record) => (
                         <tr key={record.id} className="border-b last:border-0">
-                          <td className="py-2 pr-4">{formatDate(record.date)}</td>
+                          <td className="py-2 pr-4">{formatShortDate(record.date)}</td>
                           <td className="py-2 pr-4">{String(record.weight)}</td>
                           <td className="py-2">{record.notes || "-"}</td>
                         </tr>
@@ -528,7 +497,7 @@ export default async function HayvanDetayPage({
                         <div className="text-right text-xs text-muted-foreground">
                           <p>{ANIMAL_SEX_LABELS[child.sex] ?? child.sex}</p>
                           {child.dateOfBirth && (
-                            <p>{formatDate(child.dateOfBirth)}</p>
+                            <p>{child.dateOfBirth ? formatShortDate(child.dateOfBirth) : "-"}</p>
                           )}
                         </div>
                       </Link>

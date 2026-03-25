@@ -1,8 +1,7 @@
 "use client"
 
-import { useEffect } from "react"
 import Link from "next/link"
-import { useForm, Controller } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
@@ -16,18 +15,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { ANIMAL_STATUS_LABELS } from "@/lib/constants"
-
-// ============================================================================
-// Form schema - zod validation with Turkish error messages
-// ============================================================================
+import { NativeSelect } from "@/components/ui/native-select"
+import { ANIMAL_STATUS_LABELS, ANIMAL_SEX_LABELS } from "@/lib/constants"
 
 const BREEDS = [
   "Simental",
@@ -43,10 +32,7 @@ const BREEDS = [
 ] as const
 
 const animalFormSchema = z.object({
-  earTagNumber: z
-    .string()
-    .trim()
-    .min(1, "Kulak numarası zorunludur"),
+  earTagNumber: z.string().trim().min(1, "Kulak numarası zorunludur"),
   name: z.string().trim().optional().or(z.literal("")),
   breed: z.string().min(1, "Irk seçimi zorunludur"),
   sex: z.enum(["MALE", "FEMALE"], "Cinsiyet seçimi zorunludur"),
@@ -62,10 +48,6 @@ const animalFormSchema = z.object({
 })
 
 export type AnimalFormValues = z.infer<typeof animalFormSchema>
-
-// ============================================================================
-// Animal type for edit mode
-// ============================================================================
 
 export interface Animal {
   id: string
@@ -84,25 +66,17 @@ export interface Animal {
   notes?: string | null
 }
 
-// ============================================================================
-// Props
-// ============================================================================
-
 interface AnimalFormProps {
   animal?: Animal
   onSubmit: (data: AnimalFormValues) => Promise<void>
   isSubmitting: boolean
 }
 
-// ============================================================================
-// Component
-// ============================================================================
 
 export function AnimalForm({ animal, onSubmit, isSubmitting }: AnimalFormProps) {
   const {
     register,
     handleSubmit,
-    control,
     watch,
     formState: { errors },
   } = useForm<AnimalFormValues>({
@@ -113,15 +87,10 @@ export function AnimalForm({ animal, onSubmit, isSubmitting }: AnimalFormProps) 
       breed: animal?.breed ?? "",
       sex: (animal?.sex as "MALE" | "FEMALE") ?? undefined,
       color: animal?.color ?? "",
-      dateOfBirth: animal?.dateOfBirth
-        ? animal.dateOfBirth.substring(0, 10)
-        : "",
+      dateOfBirth: animal?.dateOfBirth ? animal.dateOfBirth.substring(0, 10) : "",
       status: animal?.status ?? "ACTIVE",
-      acquisitionType:
-        (animal?.acquisitionType as "BORN" | "PURCHASED") ?? undefined,
-      acquisitionDate: animal?.acquisitionDate
-        ? animal.acquisitionDate.substring(0, 10)
-        : "",
+      acquisitionType: (animal?.acquisitionType as "BORN" | "PURCHASED") ?? undefined,
+      acquisitionDate: animal?.acquisitionDate ? animal.acquisitionDate.substring(0, 10) : "",
       acquisitionPrice: animal?.acquisitionPrice ?? undefined,
       motherId: animal?.motherId ?? "",
       fatherId: animal?.fatherId ?? "",
@@ -140,108 +109,47 @@ export function AnimalForm({ animal, onSubmit, isSubmitting }: AnimalFormProps) 
             <CardTitle>Temel Bilgiler</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Kulak Numarası */}
             <div className="space-y-2">
               <Label htmlFor="earTagNumber">Kulak Numarası *</Label>
-              <Input
-                id="earTagNumber"
-                placeholder="TR-12345678"
-                {...register("earTagNumber")}
-              />
-              {errors.earTagNumber && (
-                <p className="text-sm text-destructive">
-                  {errors.earTagNumber.message}
-                </p>
-              )}
+              <Input id="earTagNumber" placeholder="TR-12345678" {...register("earTagNumber")} />
+              {errors.earTagNumber && <p className="text-sm text-destructive">{errors.earTagNumber.message}</p>}
             </div>
 
-            {/* İsim */}
             <div className="space-y-2">
               <Label htmlFor="name">İsim</Label>
-              <Input
-                id="name"
-                placeholder="Örnek: Sarıız"
-                {...register("name")}
-              />
+              <Input id="name" placeholder="Örnek: Sarıkız" {...register("name")} />
             </div>
 
-            {/* Irk */}
             <div className="space-y-2">
               <Label htmlFor="breed">Irk *</Label>
-              <Controller
-                name="breed"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Irk seçiniz" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {BREEDS.map((breed) => (
-                        <SelectItem key={breed} value={breed}>
-                          {breed}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.breed && (
-                <p className="text-sm text-destructive">
-                  {errors.breed.message}
-                </p>
-              )}
+              <NativeSelect id="breed" className="w-full" {...register("breed")}>
+                <option value="">Irk seçiniz</option>
+                {BREEDS.map((breed) => (
+                  <option key={breed} value={breed}>{breed}</option>
+                ))}
+              </NativeSelect>
+              {errors.breed && <p className="text-sm text-destructive">{errors.breed.message}</p>}
             </div>
 
-            {/* Cinsiyet */}
             <div className="space-y-2">
               <Label htmlFor="sex">Cinsiyet *</Label>
-              <Controller
-                name="sex"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Cinsiyet seçiniz" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="FEMALE">Dişi</SelectItem>
-                      <SelectItem value="MALE">Erkek</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.sex && (
-                <p className="text-sm text-destructive">
-                  {errors.sex.message}
-                </p>
-              )}
+              <NativeSelect id="sex" className="w-full" {...register("sex")}>
+                <option value="">Cinsiyet seçiniz</option>
+                {Object.entries(ANIMAL_SEX_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </NativeSelect>
+              {errors.sex && <p className="text-sm text-destructive">{errors.sex.message}</p>}
             </div>
 
-            {/* Renk */}
             <div className="space-y-2">
               <Label htmlFor="color">Renk</Label>
-              <Input
-                id="color"
-                placeholder="Örnek: Siyah-Beyaz"
-                {...register("color")}
-              />
+              <Input id="color" placeholder="Örnek: Siyah-Beyaz" {...register("color")} />
             </div>
 
-            {/* Doğum Tarihi */}
             <div className="space-y-2">
               <Label htmlFor="dateOfBirth">Doğum Tarihi</Label>
-              <Input
-                id="dateOfBirth"
-                type="date"
-                {...register("dateOfBirth")}
-              />
+              <Input id="dateOfBirth" type="date" {...register("dateOfBirth")} />
             </div>
           </CardContent>
         </Card>
@@ -253,123 +161,57 @@ export function AnimalForm({ animal, onSubmit, isSubmitting }: AnimalFormProps) 
               <CardTitle>Durum & Edinme</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Durum */}
               <div className="space-y-2">
                 <Label htmlFor="status">Durum *</Label>
-                <Controller
-                  name="status"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Durum seçiniz" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(ANIMAL_STATUS_LABELS).map(
-                          ([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
-                            </SelectItem>
-                          )
-                        )}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.status && (
-                  <p className="text-sm text-destructive">
-                    {errors.status.message}
-                  </p>
-                )}
+                <NativeSelect id="status" className="w-full" {...register("status")}>
+                  <option value="">Durum seçiniz</option>
+                  {Object.entries(ANIMAL_STATUS_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </NativeSelect>
+                {errors.status && <p className="text-sm text-destructive">{errors.status.message}</p>}
               </div>
 
-              {/* Edinme Türü */}
               <div className="space-y-2">
                 <Label htmlFor="acquisitionType">Edinme Türü *</Label>
-                <Controller
-                  name="acquisitionType"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Edinme türü seçiniz" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="BORN">Doğum</SelectItem>
-                        <SelectItem value="PURCHASED">Satın Alma</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.acquisitionType && (
-                  <p className="text-sm text-destructive">
-                    {errors.acquisitionType.message}
-                  </p>
-                )}
+                <NativeSelect id="acquisitionType" className="w-full" {...register("acquisitionType")}>
+                  <option value="">Edinme türü seçiniz</option>
+                  <option value="BORN">Doğum</option>
+                  <option value="PURCHASED">Satın Alma</option>
+                </NativeSelect>
+                {errors.acquisitionType && <p className="text-sm text-destructive">{errors.acquisitionType.message}</p>}
               </div>
 
-              {/* Edinme Tarihi */}
               <div className="space-y-2">
                 <Label htmlFor="acquisitionDate">Edinme Tarihi</Label>
-                <Input
-                  id="acquisitionDate"
-                  type="date"
-                  {...register("acquisitionDate")}
-                />
+                <Input id="acquisitionDate" type="date" {...register("acquisitionDate")} />
               </div>
 
-              {/* Edinme Fiyati - only when PURCHASED */}
               {acquisitionType === "PURCHASED" && (
                 <div className="space-y-2">
                   <Label htmlFor="acquisitionPrice">Edinme Fiyatı (TL)</Label>
-                  <Input
-                    id="acquisitionPrice"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    {...register("acquisitionPrice")}
-                  />
+                  <Input id="acquisitionPrice" type="number" step="0.01" min="0" placeholder="0.00" {...register("acquisitionPrice")} />
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Soy Bilgisi */}
           <Card>
             <CardHeader>
               <CardTitle>Soy Bilgisi</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Anne */}
               <div className="space-y-2">
                 <Label htmlFor="motherId">Anne (ID)</Label>
-                <Input
-                  id="motherId"
-                  placeholder="Anne hayvan ID'si"
-                  {...register("motherId")}
-                />
+                <Input id="motherId" placeholder="Anne hayvan ID'si" {...register("motherId")} />
               </div>
-
-              {/* Baba */}
               <div className="space-y-2">
                 <Label htmlFor="fatherId">Baba (ID)</Label>
-                <Input
-                  id="fatherId"
-                  placeholder="Baba hayvan ID'si"
-                  {...register("fatherId")}
-                />
+                <Input id="fatherId" placeholder="Baba hayvan ID'si" {...register("fatherId")} />
               </div>
             </CardContent>
           </Card>
 
-          {/* Notlar */}
           <Card>
             <CardHeader>
               <CardTitle>Notlar</CardTitle>
@@ -377,23 +219,15 @@ export function AnimalForm({ animal, onSubmit, isSubmitting }: AnimalFormProps) 
             <CardContent>
               <div className="space-y-2">
                 <Label htmlFor="notes">Notlar</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Hayvan ile ilgili ek notlar..."
-                  rows={4}
-                  {...register("notes")}
-                />
+                <Textarea id="notes" placeholder="Hayvan ile ilgili ek notlar..." rows={4} {...register("notes")} />
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex items-center justify-end gap-3">
-        <Button variant="outline" render={<Link href="/hayvanlar" />}>
-          İptal
-        </Button>
+        <Button variant="outline" render={<Link href="/hayvanlar" />}>İptal</Button>
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Kaydediliyor..." : "Kaydet"}
         </Button>

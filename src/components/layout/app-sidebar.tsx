@@ -35,11 +35,11 @@ import {
 } from "@/components/ui/sidebar";
 
 const mainNavItems = [
-  { title: "Ana Sayfa", href: "/", icon: LayoutDashboard },
+  { title: "Yönetim Paneli", href: "/", icon: LayoutDashboard },
   { title: "Hayvanlar", href: "/hayvanlar", icon: Bug },
   { title: "Sağlık", href: "/saglik", icon: HeartPulse },
   { title: "Üreme", href: "/ureme", icon: Baby },
-  { title: "Süt Üretimi", href: "/sut", icon: Droplets },
+  { title: "Süt Verimi", href: "/sut", icon: Droplets },
   { title: "Besleme", href: "/besleme", icon: Wheat },
   { title: "Finans", href: "/finans", icon: Wallet },
   { title: "Meralar", href: "/meralar", icon: TreePine },
@@ -62,7 +62,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({
-  farmName = "Çiftlik Yönetim",
+  farmName = "Ümmet Ali Oğulları Çiftliği",
   notificationCount = 0,
 }: AppSidebarProps) {
   const pathname = usePathname();
@@ -74,7 +74,7 @@ export function AppSidebar({
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="h-14 justify-center">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
