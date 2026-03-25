@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { heatRecordSchema, breedingFilterSchema } from "@/lib/validations/breeding";
+import { createNotification } from "@/lib/notifications";
+import { HEAT_INTENSITY_LABELS } from "@/lib/constants";
 import type { Prisma } from "@prisma/client";
 
 // ============================================================================
@@ -120,6 +122,17 @@ export async function POST(request: NextRequest) {
           select: { id: true, name: true, earTagNumber: true },
         },
       },
+    });
+
+    // Kızgınlık tespit bildirimi (fire-and-forget)
+    const animalName = record.animal.name || record.animal.earTagNumber;
+    const intensityLabel = HEAT_INTENSITY_LABELS[data.intensity] || data.intensity;
+    createNotification({
+      farmId: session.user.farmId,
+      type: "HEAT_PREDICTED",
+      title: "Kızgınlık Tespit Edildi",
+      message: `${animalName} için ${intensityLabel} şiddetinde kızgınlık tespit edildi.`,
+      relatedEntityId: record.id,
     });
 
     return apiSuccess(record);

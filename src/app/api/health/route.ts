@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { healthRecordSchema, healthRecordFilterSchema } from "@/lib/validations/health";
+import { createNotification } from "@/lib/notifications";
+import { HEALTH_RECORD_TYPE_LABELS } from "@/lib/constants";
 import type { Prisma } from "@prisma/client";
 
 // ============================================================================
@@ -139,6 +141,20 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Ciddi sağlık olayları için bildirim (ameliyat, tedavi, veteriner ziyareti)
+    const notifyTypes = ["SURGERY", "TREATMENT", "VET_VISIT"];
+    if (notifyTypes.includes(data.type)) {
+      const animalName = record.animal.name || record.animal.earTagNumber;
+      const typeLabel = HEALTH_RECORD_TYPE_LABELS[data.type] || data.type;
+      createNotification({
+        farmId: session.user.farmId,
+        type: "GENERAL",
+        title: "Sağlık Kaydı Oluşturuldu",
+        message: `${animalName} için ${typeLabel} kaydı oluşturuldu.${data.diagnosis ? ` Teşhis: ${data.diagnosis}` : ""}`,
+        relatedEntityId: record.id,
+      });
+    }
 
     return apiSuccess(record);
   } catch (error) {

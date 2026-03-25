@@ -5,6 +5,8 @@ import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { animalUpdateSchema } from "@/lib/validations/animal";
 import { createAuditLog } from "@/lib/audit";
+import { createNotification } from "@/lib/notifications";
+import { ANIMAL_STATUS_LABELS } from "@/lib/constants";
 
 // ============================================================================
 // GET /api/animals/[id] - Tek hayvan detayi
@@ -133,6 +135,22 @@ export async function PUT(
       entityId: id,
       changes: data as Record<string, unknown>,
     });
+
+    // Durum değişikliği bildirimi (satıldı, öldü vb.)
+    if (data.status && data.status !== existing.status) {
+      const statusLabel = ANIMAL_STATUS_LABELS[data.status] || data.status;
+      const animalName = animal.name || animal.earTagNumber;
+      const notifyStatuses = ["SOLD", "DECEASED"];
+      if (notifyStatuses.includes(data.status)) {
+        createNotification({
+          farmId: session.user.farmId,
+          type: "GENERAL",
+          title: "Hayvan Durumu Değişti",
+          message: `${animalName} durumu "${statusLabel}" olarak güncellendi.`,
+          relatedEntityId: id,
+        });
+      }
+    }
 
     return apiSuccess(animal);
   } catch (error) {

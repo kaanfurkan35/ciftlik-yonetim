@@ -39,20 +39,23 @@ export default async function UremePage() {
 
   // İstatistikleri ve kayıtları paralel olarak getir
   const [
-    pregnantCount,
-    upcomingCalvings,
-    inseminationsThisMonth,
+    pregnantAnimals,
+    upcomingCalvingChecks,
+    inseminationsThisMonthList,
     heatRecords,
     inseminationRecords,
     pregnancyChecks,
     calvingRecords,
   ] = await Promise.all([
-    // Gebe hayvan sayısı
-    prisma.animal.count({
+    // Gebe hayvanlar (detaylı)
+    prisma.animal.findMany({
       where: { farmId: session.user.farmId, status: "PREGNANT", deletedAt: null },
+      select: { id: true, name: true, earTagNumber: true },
+      orderBy: { name: "asc" },
+      take: 10,
     }),
-    // Yaklaşan doğumlar (30 gün içinde)
-    prisma.pregnancyCheck.count({
+    // Yaklaşan doğumlar (30 gün içinde, detaylı)
+    prisma.pregnancyCheck.findMany({
       where: {
         deletedAt: null,
         animal: { farmId: session.user.farmId },
@@ -62,14 +65,29 @@ export default async function UremePage() {
           lte: thirtyDaysFromNow,
         },
       },
+      select: {
+        id: true,
+        expectedCalvingDate: true,
+        animal: { select: { id: true, name: true, earTagNumber: true } },
+      },
+      orderBy: { expectedCalvingDate: "asc" },
+      take: 10,
     }),
-    // Bu ay tohumlama sayısı
-    prisma.inseminationRecord.count({
+    // Bu ay tohumlama (detaylı)
+    prisma.inseminationRecord.findMany({
       where: {
         deletedAt: null,
         animal: { farmId: session.user.farmId },
         date: { gte: startOfMonth },
       },
+      select: {
+        id: true,
+        date: true,
+        type: true,
+        animal: { select: { id: true, name: true, earTagNumber: true } },
+      },
+      orderBy: { date: "desc" },
+      take: 10,
     }),
     // Son kızgınlık kayıtları
     prisma.heatRecord.findMany({
@@ -126,23 +144,96 @@ export default async function UremePage() {
         </Button>
       </PageHeader>
 
-      {/* Özet İstatistikler */}
+      {/* Özet İstatistikler — tıklanabilir, hayvan detayları ile */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard
-          title="Gebe Sayısı"
-          value={pregnantCount}
-          icon={<Heart className="size-4" />}
-        />
-        <StatCard
-          title="Yaklaşan Doğumlar"
-          value={upcomingCalvings}
-          icon={<CalendarClock className="size-4" />}
-        />
-        <StatCard
-          title="Bu Ay Tohumlama"
-          value={inseminationsThisMonth}
-          icon={<Syringe className="size-4" />}
-        />
+        <Card className="border-l-[3px] border-l-primary">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Heart className="size-4" />
+              Gebe Sayısı
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pregnantAnimals.length}</div>
+            {pregnantAnimals.length > 0 && (
+              <div className="mt-3 space-y-1 border-t pt-3">
+                {pregnantAnimals.map((a) => (
+                  <Link
+                    key={a.id}
+                    href={`/hayvanlar/${a.id}`}
+                    className="flex items-center gap-2 rounded-md px-2 py-1 text-sm transition-colors hover:bg-muted"
+                  >
+                    <span className="size-1.5 rounded-full bg-primary" />
+                    <span className="font-medium">{a.name || a.earTagNumber}</span>
+                    <span className="text-xs text-muted-foreground font-mono">{a.earTagNumber}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-[3px] border-l-accent">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <CalendarClock className="size-4" />
+              Yaklaşan Doğumlar
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{upcomingCalvingChecks.length}</div>
+            {upcomingCalvingChecks.length > 0 && (
+              <div className="mt-3 space-y-1 border-t pt-3">
+                {upcomingCalvingChecks.map((c) => (
+                  <Link
+                    key={c.id}
+                    href={`/hayvanlar/${c.animal.id}`}
+                    className="flex items-center justify-between rounded-md px-2 py-1 text-sm transition-colors hover:bg-muted"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="size-1.5 rounded-full bg-accent" />
+                      <span className="font-medium">{c.animal.name || c.animal.earTagNumber}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {c.expectedCalvingDate ? formatShortDate(c.expectedCalvingDate) : ""}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-[3px] border-l-success">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Syringe className="size-4" />
+              Bu Ay Tohumlama
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{inseminationsThisMonthList.length}</div>
+            {inseminationsThisMonthList.length > 0 && (
+              <div className="mt-3 space-y-1 border-t pt-3">
+                {inseminationsThisMonthList.map((ins) => (
+                  <Link
+                    key={ins.id}
+                    href={`/hayvanlar/${ins.animal.id}`}
+                    className="flex items-center justify-between rounded-md px-2 py-1 text-sm transition-colors hover:bg-muted"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="size-1.5 rounded-full bg-success" />
+                      <span className="font-medium">{ins.animal.name || ins.animal.earTagNumber}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {formatShortDate(ins.date)}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Sekmeli İçerik */}

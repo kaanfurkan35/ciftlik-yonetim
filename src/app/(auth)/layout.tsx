@@ -1,6 +1,6 @@
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-green-950">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden" style={{ backgroundColor: 'var(--auth-bg)' }}>
       {/* Background video */}
       <video
         autoPlay

@@ -25,7 +25,7 @@ export function StatCard({
   borderColor = "border-l-primary",
 }: StatCardProps) {
   return (
-    <Card className={cn("border-l-[3px] shadow-sm transition-shadow hover:shadow-md cursor-pointer", borderColor, className)}>
+    <Card className={cn("border-l-[3px] shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer", borderColor, className)}>
       <CardContent className="pt-4">
         <div className="flex items-start justify-between">
           <div>

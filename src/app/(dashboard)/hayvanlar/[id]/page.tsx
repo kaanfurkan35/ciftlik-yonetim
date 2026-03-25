@@ -27,6 +27,7 @@ import {
   HEALTH_RECORD_TYPE_LABELS,
   MILK_SESSION_LABELS,
 } from "@/lib/constants"
+import { Syringe, Pill } from "lucide-react"
 import { formatShortDate, formatCurrency, formatAge } from "@/lib/format"
 
 interface DetailItemProps {
@@ -75,6 +76,14 @@ export default async function HayvanDetayPage({
         where: { deletedAt: null },
         orderBy: { date: "desc" },
         take: 10,
+      },
+      vaccinationRecords: {
+        where: { deletedAt: null },
+        orderBy: { date: "desc" },
+        take: 10,
+        include: {
+          vaccinationType: { select: { name: true } },
+        },
       },
       milkRecords: {
         where: { deletedAt: null },
@@ -156,7 +165,7 @@ export default async function HayvanDetayPage({
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            render={<Link href={`/hayvanlar/${animal.id}/duzenle`} />}
+            render={<Link href={`/hayvanlar/${animal.id}/edit`} />}
           >
             <Pencil className="size-4" />
             Düzenle
@@ -291,48 +300,129 @@ export default async function HayvanDetayPage({
 
         {/* Sağlık Kayıtları */}
         <TabsContent value="saglik">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Heart className="size-4" />
-                Sağlık Kayıtları
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {animal.healthRecords.length === 0 ? (
-                <div className="flex min-h-[200px] items-center justify-center text-sm text-muted-foreground">
-                  Henüz sağlık kaydı bulunmuyor.
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left">
-                        <th className="pb-2 pr-4 font-medium">Tarih</th>
-                        <th className="pb-2 pr-4 font-medium">Tür</th>
-                        <th className="pb-2 pr-4 font-medium">Teşhis</th>
-                        <th className="pb-2 pr-4 font-medium">Tedavi</th>
-                        <th className="pb-2 font-medium">Veteriner</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {animal.healthRecords.map((record) => (
-                        <tr key={record.id} className="border-b last:border-0">
-                          <td className="py-2 pr-4">{formatShortDate(record.date)}</td>
-                          <td className="py-2 pr-4">
-                            {HEALTH_RECORD_TYPE_LABELS[record.type] ?? record.type}
-                          </td>
-                          <td className="py-2 pr-4">{record.diagnosis || "-"}</td>
-                          <td className="py-2 pr-4">{record.treatment || "-"}</td>
-                          <td className="py-2">{record.vetName || "-"}</td>
+          <div className="space-y-4">
+            {/* Muayene / Tedavi Kayıtları */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Heart className="size-4" />
+                  Muayene &amp; Tedavi Kayıtları
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {animal.healthRecords.length === 0 ? (
+                  <div className="flex min-h-[120px] items-center justify-center text-sm text-muted-foreground">
+                    Henüz sağlık kaydı bulunmuyor.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b text-left">
+                          <th className="pb-2 pr-4 font-medium">Tarih</th>
+                          <th className="pb-2 pr-4 font-medium">Tür</th>
+                          <th className="pb-2 pr-4 font-medium">Teşhis</th>
+                          <th className="pb-2 pr-4 font-medium">Tedavi</th>
+                          <th className="pb-2 pr-4 font-medium">İlaç</th>
+                          <th className="pb-2 pr-4 font-medium">Doz</th>
+                          <th className="pb-2 pr-4 font-medium">Veteriner</th>
+                          <th className="pb-2 font-medium">Maliyet</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                      </thead>
+                      <tbody>
+                        {animal.healthRecords.map((record) => (
+                          <tr key={record.id} className="border-b last:border-0">
+                            <td className="py-2 pr-4 whitespace-nowrap">{formatShortDate(record.date)}</td>
+                            <td className="py-2 pr-4">
+                              <Badge variant="outline" className="font-normal">
+                                {HEALTH_RECORD_TYPE_LABELS[record.type] ?? record.type}
+                              </Badge>
+                            </td>
+                            <td className="py-2 pr-4">{record.diagnosis || "-"}</td>
+                            <td className="py-2 pr-4">{record.treatment || "-"}</td>
+                            <td className="py-2 pr-4">
+                              {record.medication ? (
+                                <span className="flex items-center gap-1">
+                                  <Pill className="size-3 text-muted-foreground" />
+                                  {record.medication}
+                                </span>
+                              ) : "-"}
+                            </td>
+                            <td className="py-2 pr-4">{record.dosage || "-"}</td>
+                            <td className="py-2 pr-4">{record.vetName || "-"}</td>
+                            <td className="py-2 whitespace-nowrap">
+                              {record.cost != null ? formatCurrency(Number(record.cost)) : "-"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Aşı Kayıtları */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Syringe className="size-4" />
+                  Aşı Kayıtları
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {animal.vaccinationRecords.length === 0 ? (
+                  <div className="flex min-h-[120px] items-center justify-center text-sm text-muted-foreground">
+                    Henüz aşı kaydı bulunmuyor.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b text-left">
+                          <th className="pb-2 pr-4 font-medium">Tarih</th>
+                          <th className="pb-2 pr-4 font-medium">Aşı Türü</th>
+                          <th className="pb-2 pr-4 font-medium">Parti No</th>
+                          <th className="pb-2 pr-4 font-medium">Sonraki Tarih</th>
+                          <th className="pb-2 pr-4 font-medium">Durum</th>
+                          <th className="pb-2 font-medium">Maliyet</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {animal.vaccinationRecords.map((record) => {
+                          const isOverdue = record.nextDueDate && new Date(record.nextDueDate) < new Date()
+                          return (
+                            <tr key={record.id} className="border-b last:border-0">
+                              <td className="py-2 pr-4 whitespace-nowrap">{formatShortDate(record.date)}</td>
+                              <td className="py-2 pr-4 font-medium">{record.vaccinationType.name}</td>
+                              <td className="py-2 pr-4 font-mono text-xs">{record.batchNumber || "-"}</td>
+                              <td className="py-2 pr-4 whitespace-nowrap">
+                                {record.nextDueDate ? formatShortDate(record.nextDueDate) : "-"}
+                              </td>
+                              <td className="py-2 pr-4">
+                                {record.nextDueDate ? (
+                                  isOverdue ? (
+                                    <Badge variant="destructive" className="text-xs">Gecikmiş</Badge>
+                                  ) : (
+                                    <Badge className="bg-success/10 text-success text-xs">Güncel</Badge>
+                                  )
+                                ) : (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
+                              </td>
+                              <td className="py-2 whitespace-nowrap">
+                                {record.cost != null ? formatCurrency(Number(record.cost)) : "-"}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Süt Kayıtları */}

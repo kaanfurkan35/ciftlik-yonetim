@@ -90,10 +90,10 @@ export default async function BeslemePage() {
         </div>
       </PageHeader>
 
-      {/* İstatistik kartları */}
+      {/* İstatistik kartları — detaylı */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card size="sm">
-          <CardHeader>
+        <Card className="border-l-[3px] border-l-primary">
+          <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Wheat className="size-4" />
               Toplam Yem Çeşidi
@@ -101,25 +101,58 @@ export default async function BeslemePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalFeedTypes}</div>
+            {feedTypes.length > 0 && (
+              <div className="mt-3 space-y-1 border-t pt-3">
+                {feedTypes.slice(0, 5).map((ft) => (
+                  <div key={ft.id} className="flex items-center justify-between rounded-md px-2 py-1 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="size-1.5 rounded-full bg-primary" />
+                      <span className="font-medium">{ft.name}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {formatNumber(Number(ft.currentStock))} {ft.unit}
+                    </span>
+                  </div>
+                ))}
+                {feedTypes.length > 5 && (
+                  <p className="px-2 text-xs text-muted-foreground">+{feedTypes.length - 5} daha...</p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        <Card size="sm">
-          <CardHeader>
+        <Card className="border-l-[3px] border-l-destructive">
+          <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <AlertTriangle className="size-4 text-red-500" />
+              <AlertTriangle className="size-4 text-destructive" />
               Düşük Stoklu Yemler
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-destructive">
               {lowStockTypes.length}
             </div>
+            {lowStockTypes.length > 0 && (
+              <div className="mt-3 space-y-1 border-t pt-3">
+                {lowStockTypes.map((ft) => (
+                  <div key={ft.id} className="flex items-center justify-between rounded-md px-2 py-1 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="size-1.5 rounded-full bg-destructive" />
+                      <span className="font-medium">{ft.name}</span>
+                    </div>
+                    <span className="text-xs font-medium text-destructive">
+                      {formatNumber(Number(ft.currentStock))} / {formatNumber(Number(ft.minimumStock))} {ft.unit}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        <Card size="sm">
-          <CardHeader>
+        <Card className="border-l-[3px] border-l-accent">
+          <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <ShoppingCart className="size-4" />
               Bu Ayki Harcama
@@ -129,6 +162,21 @@ export default async function BeslemePage() {
             <div className="text-2xl font-bold">
               {formatCurrency(monthlyExpense)}
             </div>
+            {monthlyPurchases.length > 0 && (
+              <div className="mt-3 space-y-1 border-t pt-3">
+                {monthlyPurchases.slice(0, 5).map((p) => (
+                  <div key={p.id} className="flex items-center justify-between rounded-md px-2 py-1 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="size-1.5 rounded-full bg-accent" />
+                      <span className="font-medium">{p.feedType.name}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {formatCurrency(Number(p.totalCost))}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -322,11 +370,18 @@ export default async function BeslemePage() {
                           {FEED_UNIT_LABELS[r.feedType.unit] || r.feedType.unit}
                         </TableCell>
                         <TableCell>
-                          {r.animal
-                            ? r.animal.name || r.animal.earTagNumber
-                            : r.group
-                              ? r.group.name
-                              : "-"}
+                          {r.animal ? (
+                            <Link
+                              href={`/hayvanlar/${r.animal.id}`}
+                              className="font-medium text-primary hover:underline"
+                            >
+                              {r.animal.name || r.animal.earTagNumber}
+                            </Link>
+                          ) : r.group ? (
+                            <span className="font-medium">{r.group.name}</span>
+                          ) : (
+                            "-"
+                          )}
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate">
                           {r.notes || "-"}
