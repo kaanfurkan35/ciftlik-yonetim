@@ -5,6 +5,7 @@ import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { healthRecordSchema, healthRecordFilterSchema } from "@/lib/validations/health";
 import { createNotification } from "@/lib/notifications";
+import { createAuditLog } from "@/lib/audit";
 import { HEALTH_RECORD_TYPE_LABELS } from "@/lib/constants";
 import type { Prisma } from "@prisma/client";
 
@@ -155,6 +156,14 @@ export async function POST(request: NextRequest) {
         relatedEntityId: record.id,
       });
     }
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "CREATE",
+      entityType: "HealthRecord",
+      entityId: record.id,
+    });
 
     return apiSuccess(record);
   } catch (error) {

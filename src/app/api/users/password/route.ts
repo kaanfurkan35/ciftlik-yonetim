@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
+import { createAuditLog } from "@/lib/audit";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -49,6 +50,14 @@ export async function PUT(request: Request) {
     await prisma.user.update({
       where: { id: session.user.id },
       data: { passwordHash },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "User",
+      entityId: session.user.id,
     });
 
     return apiSuccess({ message: "Şifre başarıyla güncellendi" });

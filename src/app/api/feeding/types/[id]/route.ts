@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { feedTypeUpdateSchema } from "@/lib/validations/feeding";
+import { createAuditLog } from "@/lib/audit";
 
 // ============================================================================
 // GET /api/feeding/types/[id] - Tek yem turu detayi
@@ -116,6 +117,15 @@ export async function PUT(
       data,
     });
 
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "FeedType",
+      entityId: feedType.id,
+      changes: data as Record<string, unknown>,
+    });
+
     return apiSuccess(feedType);
   } catch (error) {
     if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
@@ -159,6 +169,14 @@ export async function DELETE(
     await prisma.feedType.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "DELETE",
+      entityType: "FeedType",
+      entityId: id,
     });
 
     return apiSuccess({ message: "Yem türü başarıyla silindi" });

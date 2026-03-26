@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { pregnancyCheckSchema } from "@/lib/validations/breeding";
+import { createAuditLog } from "@/lib/audit";
 
 // ============================================================================
 // GET /api/breeding/pregnancy/[id] - Tek gebelik kontrolu kaydi
@@ -113,6 +114,15 @@ export async function PUT(
       },
     });
 
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "PregnancyCheck",
+      entityId: record.id,
+      changes: data as Record<string, unknown>,
+    });
+
     return apiSuccess(record);
   } catch (error) {
     if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
@@ -156,6 +166,14 @@ export async function DELETE(
     await prisma.pregnancyCheck.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "DELETE",
+      entityType: "PregnancyCheck",
+      entityId: id,
     });
 
     return apiSuccess({ message: "Gebelik kontrolü kaydı başarıyla silindi" });

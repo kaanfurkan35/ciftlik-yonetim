@@ -5,6 +5,7 @@ import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { calvingRecordSchema, breedingFilterSchema } from "@/lib/validations/breeding";
 import { createNotification } from "@/lib/notifications";
+import { createAuditLog } from "@/lib/audit";
 import type { Prisma } from "@prisma/client";
 
 // ============================================================================
@@ -159,6 +160,14 @@ export async function POST(request: NextRequest) {
       type: "CALVING_EXPECTED",
       title: "Doğum Gerçekleşti",
       message: `${animalName} için doğum kaydı oluşturuldu.`,
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "CREATE",
+      entityType: "CalvingRecord",
+      entityId: record.id,
     });
 
     return apiSuccess(record);

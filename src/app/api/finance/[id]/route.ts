@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { transactionUpdateSchema } from "@/lib/validations/finance";
+import { createAuditLog } from "@/lib/audit";
 
 // ============================================================================
 // GET /api/finance/[id] - Tek finansal islem detayi
@@ -119,6 +120,15 @@ export async function PUT(
       },
     });
 
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "Transaction",
+      entityId: transaction.id,
+      changes: data as Record<string, unknown>,
+    });
+
     return apiSuccess(transaction);
   } catch (error) {
     if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
@@ -162,6 +172,14 @@ export async function DELETE(
     await prisma.transaction.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "DELETE",
+      entityType: "Transaction",
+      entityId: id,
     });
 
     return apiSuccess({ message: "Finansal işlem başarıyla silindi" });

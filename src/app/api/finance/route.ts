@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { transactionSchema, transactionFilterSchema } from "@/lib/validations/finance";
+import { createAuditLog } from "@/lib/audit";
 import type { Prisma } from "@prisma/client";
 
 // ============================================================================
@@ -149,6 +150,14 @@ export async function POST(request: NextRequest) {
           select: { id: true, name: true },
         },
       },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "CREATE",
+      entityType: "Transaction",
+      entityId: transaction.id,
     });
 
     return apiSuccess(transaction);

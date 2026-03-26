@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { medicineInventoryUpdateSchema } from "@/lib/validations/health";
+import { createAuditLog } from "@/lib/audit";
 
 // ============================================================================
 // GET /api/health/medicine/[id] - Tek ilac kaydi detayi
@@ -82,6 +83,15 @@ export async function PUT(
       data: parsed.data,
     });
 
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "MedicineInventory",
+      entityId: medicine.id,
+      changes: parsed.data as Record<string, unknown>,
+    });
+
     return apiSuccess(medicine);
   } catch (error) {
     if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
@@ -125,6 +135,14 @@ export async function DELETE(
     await prisma.medicineInventory.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "DELETE",
+      entityType: "MedicineInventory",
+      entityId: id,
     });
 
     return apiSuccess({ message: "İlaç kaydı başarıyla silindi" });

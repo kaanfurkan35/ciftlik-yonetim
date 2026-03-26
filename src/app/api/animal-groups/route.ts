@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { animalGroupCreateSchema, animalGroupFilterSchema } from "@/lib/validations/animal-group";
+import { createAuditLog } from "@/lib/audit";
 import type { Prisma } from "@prisma/client";
 
 // ============================================================================
@@ -105,6 +106,14 @@ export async function POST(request: NextRequest) {
         farmId: session.user.farmId,
         createdById: session.user.id,
       },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "CREATE",
+      entityType: "AnimalGroup",
+      entityId: group.id,
     });
 
     return apiSuccess(group);

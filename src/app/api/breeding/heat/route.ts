@@ -5,6 +5,7 @@ import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { heatRecordSchema, breedingFilterSchema } from "@/lib/validations/breeding";
 import { createNotification } from "@/lib/notifications";
+import { createAuditLog } from "@/lib/audit";
 import { HEAT_INTENSITY_LABELS } from "@/lib/constants";
 import type { Prisma } from "@prisma/client";
 
@@ -133,6 +134,14 @@ export async function POST(request: NextRequest) {
       title: "Kızgınlık Tespit Edildi",
       message: `${animalName} için ${intensityLabel} şiddetinde kızgınlık tespit edildi.`,
       relatedEntityId: record.id,
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "CREATE",
+      entityType: "HeatRecord",
+      entityId: record.id,
     });
 
     return apiSuccess(record);

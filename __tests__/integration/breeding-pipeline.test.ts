@@ -31,6 +31,8 @@ vi.mock('@/lib/notifications', () => ({
   createNotification: vi.fn(),
 }))
 
+vi.mock('@/lib/audit', () => ({ createAuditLog: vi.fn() }))
+
 import { prisma } from '@/lib/prisma'
 import { createNotification } from '@/lib/notifications'
 

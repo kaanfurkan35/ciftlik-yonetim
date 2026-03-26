@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
+import { createAuditLog } from "@/lib/audit";
 import { z } from "zod";
 
 const profileUpdateSchema = z.object({
@@ -42,6 +43,15 @@ export async function PUT(request: Request) {
         createdAt: true,
         updatedAt: true,
       },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "User",
+      entityId: user.id,
+      changes: data as Record<string, unknown>,
     });
 
     return apiSuccess(user);

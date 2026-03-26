@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { grazingRecordUpdateSchema } from "@/lib/validations/grazing-record";
+import { createAuditLog } from "@/lib/audit";
 
 // ============================================================================
 // GET /api/grazing-records/[id] - Tek otlatma kaydi detayi
@@ -128,6 +129,15 @@ export async function PUT(
       data,
     });
 
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "GrazingRecord",
+      entityId: record.id,
+      changes: data as Record<string, unknown>,
+    });
+
     return apiSuccess(record);
   } catch (error) {
     if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
@@ -174,6 +184,14 @@ export async function DELETE(
     await prisma.grazingRecord.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "DELETE",
+      entityType: "GrazingRecord",
+      entityId: id,
     });
 
     return apiSuccess({ message: "Otlatma kaydı başarıyla silindi" });

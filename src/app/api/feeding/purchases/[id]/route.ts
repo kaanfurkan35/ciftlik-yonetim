@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { feedPurchaseUpdateSchema } from "@/lib/validations/feeding";
+import { createAuditLog } from "@/lib/audit";
 
 // ============================================================================
 // GET /api/feeding/purchases/[id] - Tek yem satin alma kaydi detayi
@@ -139,6 +140,15 @@ export async function PUT(
         });
       });
 
+      createAuditLog({
+        userId: session.user.id,
+        farmId: session.user.farmId,
+        action: "UPDATE",
+        entityType: "FeedPurchase",
+        entityId: purchase.id,
+        changes: data as Record<string, unknown>,
+      });
+
       return apiSuccess(purchase);
     }
 
@@ -150,6 +160,15 @@ export async function PUT(
           select: { id: true, name: true, unit: true },
         },
       },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "FeedPurchase",
+      entityId: purchase.id,
+      changes: data as Record<string, unknown>,
     });
 
     return apiSuccess(purchase);
@@ -206,6 +225,14 @@ export async function DELETE(
           currentStock: { decrement: Number(existing.quantity) },
         },
       });
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "DELETE",
+      entityType: "FeedPurchase",
+      entityId: id,
     });
 
     return apiSuccess({ message: "Satın alma kaydı başarıyla silindi" });

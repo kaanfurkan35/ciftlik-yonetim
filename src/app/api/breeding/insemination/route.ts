@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { inseminationRecordSchema, breedingFilterSchema } from "@/lib/validations/breeding";
+import { createAuditLog } from "@/lib/audit";
 import type { Prisma } from "@prisma/client";
 
 // ============================================================================
@@ -141,6 +142,14 @@ export async function POST(request: NextRequest) {
           select: { id: true, name: true, earTagNumber: true },
         },
       },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "CREATE",
+      entityType: "InseminationRecord",
+      entityId: record.id,
     });
 
     return apiSuccess(record);

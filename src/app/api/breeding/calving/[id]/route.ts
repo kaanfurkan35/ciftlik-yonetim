@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { calvingRecordSchema } from "@/lib/validations/breeding";
+import { createAuditLog } from "@/lib/audit";
 
 // ============================================================================
 // GET /api/breeding/calving/[id] - Tek dogum kaydi
@@ -112,6 +113,15 @@ export async function PUT(
       },
     });
 
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "CalvingRecord",
+      entityId: record.id,
+      changes: data as Record<string, unknown>,
+    });
+
     return apiSuccess(record);
   } catch (error) {
     if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
@@ -155,6 +165,14 @@ export async function DELETE(
     await prisma.calvingRecord.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "DELETE",
+      entityType: "CalvingRecord",
+      entityId: id,
     });
 
     return apiSuccess({ message: "Doğum kaydı başarıyla silindi" });

@@ -5,6 +5,7 @@ import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { taskCreateSchema, taskFilterSchema } from "@/lib/validations/task";
 import { createNotification } from "@/lib/notifications";
+import { createAuditLog } from "@/lib/audit";
 import type { Prisma } from "@prisma/client";
 
 // ============================================================================
@@ -144,6 +145,14 @@ export async function POST(request: NextRequest) {
         message: `Size yeni bir görev atandı: ${task.title}.`,
       });
     }
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "CREATE",
+      entityType: "Task",
+      entityId: task.id,
+    });
 
     return apiSuccess(task);
   } catch (error) {

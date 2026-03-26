@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { medicineInventorySchema, medicineInventoryFilterSchema } from "@/lib/validations/health";
+import { createAuditLog } from "@/lib/audit";
 import type { Prisma } from "@prisma/client";
 
 // ============================================================================
@@ -95,6 +96,14 @@ export async function POST(request: NextRequest) {
         farmId: session.user.farmId,
         createdById: session.user.id,
       },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "CREATE",
+      entityType: "MedicineInventory",
+      entityId: medicine.id,
     });
 
     return apiSuccess(medicine);

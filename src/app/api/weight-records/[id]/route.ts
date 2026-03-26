@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { weightRecordUpdateSchema } from "@/lib/validations/weight-record";
+import { createAuditLog } from "@/lib/audit";
 
 // ============================================================================
 // GET /api/weight-records/[id] - Tek tartim kaydi detayi
@@ -110,6 +111,15 @@ export async function PUT(
       data,
     });
 
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "WeightRecord",
+      entityId: record.id,
+      changes: data as Record<string, unknown>,
+    });
+
     return apiSuccess(record);
   } catch (error) {
     if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
@@ -156,6 +166,14 @@ export async function DELETE(
     await prisma.weightRecord.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "DELETE",
+      entityType: "WeightRecord",
+      entityId: id,
     });
 
     return apiSuccess({ message: "Tartım kaydı başarıyla silindi" });

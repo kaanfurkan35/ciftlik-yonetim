@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { inseminationRecordSchema } from "@/lib/validations/breeding";
+import { createAuditLog } from "@/lib/audit";
 
 // ============================================================================
 // GET /api/breeding/insemination/[id] - Tek tohumlama kaydi
@@ -114,6 +115,15 @@ export async function PUT(
       },
     });
 
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "InseminationRecord",
+      entityId: record.id,
+      changes: data as Record<string, unknown>,
+    });
+
     return apiSuccess(record);
   } catch (error) {
     if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
@@ -157,6 +167,14 @@ export async function DELETE(
     await prisma.inseminationRecord.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "DELETE",
+      entityType: "InseminationRecord",
+      entityId: id,
     });
 
     return apiSuccess({ message: "Tohumlama kaydı başarıyla silindi" });

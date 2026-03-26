@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { pastureUpdateSchema } from "@/lib/validations/pasture";
+import { createAuditLog } from "@/lib/audit";
 
 // ============================================================================
 // GET /api/pastures/[id] - Tek mera detayi
@@ -101,6 +102,15 @@ export async function PUT(
       },
     });
 
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "Pasture",
+      entityId: pasture.id,
+      changes: parsed.data as Record<string, unknown>,
+    });
+
     return apiSuccess(pasture);
   } catch (error) {
     if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
@@ -144,6 +154,14 @@ export async function DELETE(
     await prisma.pasture.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "DELETE",
+      entityType: "Pasture",
+      entityId: id,
     });
 
     return apiSuccess({ message: "Mera başarıyla silindi" });

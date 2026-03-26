@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { milkSaleUpdateSchema } from "@/lib/validations/milk";
+import { createAuditLog } from "@/lib/audit";
 
 // ============================================================================
 // GET /api/milk/sales/[id] - Tek süt satışı detayı
@@ -92,6 +93,15 @@ export async function PUT(
       },
     });
 
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "MilkSale",
+      entityId: sale.id,
+      changes: data as Record<string, unknown>,
+    });
+
     return apiSuccess(sale);
   } catch (error) {
     if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
@@ -135,6 +145,14 @@ export async function DELETE(
     await prisma.milkSale.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "DELETE",
+      entityType: "MilkSale",
+      entityId: id,
     });
 
     return apiSuccess({ message: "Süt satışı başarıyla silindi" });

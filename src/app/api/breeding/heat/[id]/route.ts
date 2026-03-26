@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { heatRecordSchema } from "@/lib/validations/breeding";
+import { createAuditLog } from "@/lib/audit";
 
 // ============================================================================
 // GET /api/breeding/heat/[id] - Tek kizginlik kaydi
@@ -104,6 +105,15 @@ export async function PUT(
       },
     });
 
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "HeatRecord",
+      entityId: record.id,
+      changes: data as Record<string, unknown>,
+    });
+
     return apiSuccess(record);
   } catch (error) {
     if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
@@ -147,6 +157,14 @@ export async function DELETE(
     await prisma.heatRecord.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "DELETE",
+      entityType: "HeatRecord",
+      entityId: id,
     });
 
     return apiSuccess({ message: "Kızgınlık kaydı başarıyla silindi" });

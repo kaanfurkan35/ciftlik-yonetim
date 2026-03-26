@@ -11,6 +11,8 @@ vi.mock('@/lib/prisma', () => {
   return { prisma: { task: createMock(), user: createMock() } }
 })
 
+vi.mock('@/lib/audit', () => ({ createAuditLog: vi.fn() }))
+
 const mockAuth = vi.fn()
 vi.mock('@/lib/auth', () => ({
   auth: (...args: unknown[]) => mockAuth(...args),

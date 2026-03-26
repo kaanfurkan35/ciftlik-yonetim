@@ -3,11 +3,22 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
-import { taskUpdateSchema } from "@/lib/validations/task";
 import { createAuditLog } from "@/lib/audit";
+import { z } from "zod";
 
 // ============================================================================
-// GET /api/tasks/[id] - Tek gorev detayi
+// Kullanici guncelleme schemasi (sifre haric)
+// ============================================================================
+
+const userUpdateSchema = z.object({
+  name: z.string().trim().min(1, "İsim zorunludur").optional(),
+  phone: z.string().trim().optional(),
+  role: z.enum(["ADMIN", "MANAGER", "WORKER", "VIEWER"], "Geçersiz rol").optional(),
+  isActive: z.boolean().optional(),
+});
+
+// ============================================================================
+// GET /api/users/[id] - Tek kullanici detayi
 // ============================================================================
 
 export async function GET(
@@ -20,37 +31,45 @@ export async function GET(
       return apiError("Oturum açmanız gerekiyor", 401);
     }
 
+    checkPermission(session.user.role, "read", "users");
+
     const { id } = await params;
 
-    const task = await prisma.task.findFirst({
+    const user = await prisma.user.findFirst({
       where: {
         id,
         farmId: session.user.farmId,
         deletedAt: null,
       },
-      include: {
-        assignedTo: {
-          select: { id: true, name: true, avatarUrl: true },
-        },
-        createdBy: {
-          select: { id: true, name: true },
-        },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        avatarUrl: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
-    if (!task) {
-      return apiError("Görev bulunamadı", 404);
+    if (!user) {
+      return apiError("Kullanıcı bulunamadı", 404);
     }
 
-    return apiSuccess(task);
+    return apiSuccess(user);
   } catch (error) {
-    console.error("Görev detay hatası:", error);
-    return apiError("Görev bilgileri yüklenirken bir hata oluştu", 500);
+    if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
+      return apiError(error.message, 403);
+    }
+    console.error("Kullanıcı detay hatası:", error);
+    return apiError("Kullanıcı bilgileri yüklenirken bir hata oluştu", 500);
   }
 }
 
 // ============================================================================
-// PUT /api/tasks/[id] - Gorev guncelle
+// PUT /api/users/[id] - Kullanici guncelle (sifre haric)
 // ============================================================================
 
 export async function PUT(
@@ -63,11 +82,12 @@ export async function PUT(
       return apiError("Oturum açmanız gerekiyor", 401);
     }
 
-    checkPermission(session.user.role, "update", "tasks");
+    checkPermission(session.user.role, "update", "users");
 
     const { id } = await params;
 
-    const existing = await prisma.task.findFirst({
+    // Kullanicinin var olup olmadigini kontrol et
+    const existing = await prisma.user.findFirst({
       where: {
         id,
         farmId: session.user.farmId,
@@ -76,50 +96,31 @@ export async function PUT(
     });
 
     if (!existing) {
-      return apiError("Görev bulunamadı", 404);
+      return apiError("Kullanıcı bulunamadı", 404);
     }
 
     const body = await request.json();
-    const parsed = taskUpdateSchema.safeParse(body);
+    const parsed = userUpdateSchema.safeParse(body);
 
     if (!parsed.success) {
-      return apiError("Geçersiz görev bilgileri: " + parsed.error.message, 400);
+      return apiError("Geçersiz kullanıcı bilgileri: " + parsed.error.message, 400);
     }
 
     const data = parsed.data;
 
-    // Durum COMPLETED olarak degisiyorsa completedAt'i ayarla
-    if (data.status === "COMPLETED" && existing.status !== "COMPLETED") {
-      (data as Record<string, unknown>).completedAt = new Date();
-    } else if (data.status && data.status !== "COMPLETED") {
-      (data as Record<string, unknown>).completedAt = null;
-    }
-
-    // Atanan kullanici degistiyse kontrol et
-    if (data.assignedToId && data.assignedToId !== existing.assignedToId) {
-      const assignedUser = await prisma.user.findFirst({
-        where: {
-          id: data.assignedToId,
-          farmId: session.user.farmId,
-          deletedAt: null,
-        },
-      });
-
-      if (!assignedUser) {
-        return apiError("Atanan kullanıcı bulunamadı", 404);
-      }
-    }
-
-    const task = await prisma.task.update({
+    const user = await prisma.user.update({
       where: { id },
       data,
-      include: {
-        assignedTo: {
-          select: { id: true, name: true, avatarUrl: true },
-        },
-        createdBy: {
-          select: { id: true, name: true },
-        },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        avatarUrl: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -127,23 +128,23 @@ export async function PUT(
       userId: session.user.id,
       farmId: session.user.farmId,
       action: "UPDATE",
-      entityType: "Task",
-      entityId: task.id,
+      entityType: "User",
+      entityId: id,
       changes: data as Record<string, unknown>,
     });
 
-    return apiSuccess(task);
+    return apiSuccess(user);
   } catch (error) {
     if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
       return apiError(error.message, 403);
     }
-    console.error("Görev güncelleme hatası:", error);
-    return apiError("Görev güncellenirken bir hata oluştu", 500);
+    console.error("Kullanıcı güncelleme hatası:", error);
+    return apiError("Kullanıcı güncellenirken bir hata oluştu", 500);
   }
 }
 
 // ============================================================================
-// DELETE /api/tasks/[id] - Gorev sil (soft delete)
+// DELETE /api/users/[id] - Kullanici sil (soft delete)
 // ============================================================================
 
 export async function DELETE(
@@ -156,11 +157,16 @@ export async function DELETE(
       return apiError("Oturum açmanız gerekiyor", 401);
     }
 
-    checkPermission(session.user.role, "delete", "tasks");
+    checkPermission(session.user.role, "delete", "users");
 
     const { id } = await params;
 
-    const existing = await prisma.task.findFirst({
+    // Kendini silmeye calismasin
+    if (id === session.user.id) {
+      return apiError("Kendi hesabınızı silemezsiniz", 400);
+    }
+
+    const existing = await prisma.user.findFirst({
       where: {
         id,
         farmId: session.user.farmId,
@@ -169,10 +175,10 @@ export async function DELETE(
     });
 
     if (!existing) {
-      return apiError("Görev bulunamadı", 404);
+      return apiError("Kullanıcı bulunamadı", 404);
     }
 
-    await prisma.task.update({
+    await prisma.user.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
@@ -181,16 +187,16 @@ export async function DELETE(
       userId: session.user.id,
       farmId: session.user.farmId,
       action: "DELETE",
-      entityType: "Task",
+      entityType: "User",
       entityId: id,
     });
 
-    return apiSuccess({ message: "Görev başarıyla silindi" });
+    return apiSuccess({ message: "Kullanıcı başarıyla silindi" });
   } catch (error) {
     if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
       return apiError(error.message, 403);
     }
-    console.error("Görev silme hatası:", error);
-    return apiError("Görev silinirken bir hata oluştu", 500);
+    console.error("Kullanıcı silme hatası:", error);
+    return apiError("Kullanıcı silinirken bir hata oluştu", 500);
   }
 }

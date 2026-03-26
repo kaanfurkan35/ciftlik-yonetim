@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { checkPermission } from "@/lib/permissions";
 import { animalGroupUpdateSchema } from "@/lib/validations/animal-group";
+import { createAuditLog } from "@/lib/audit";
 
 // ============================================================================
 // GET /api/animal-groups/[id] - Tek hayvan grubu detayi
@@ -91,6 +92,15 @@ export async function PUT(
       data: parsed.data,
     });
 
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "UPDATE",
+      entityType: "AnimalGroup",
+      entityId: group.id,
+      changes: parsed.data as Record<string, unknown>,
+    });
+
     return apiSuccess(group);
   } catch (error) {
     if (error instanceof Error && error.message === "Bu işlem için yetkiniz bulunmuyor") {
@@ -134,6 +144,14 @@ export async function DELETE(
     await prisma.animalGroup.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+
+    createAuditLog({
+      userId: session.user.id,
+      farmId: session.user.farmId,
+      action: "DELETE",
+      entityType: "AnimalGroup",
+      entityId: id,
     });
 
     return apiSuccess({ message: "Hayvan grubu başarıyla silindi" });
