@@ -8,12 +8,20 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { Button } from "@/components/ui/button"
 import { AnimalListClient } from "@/components/animals/animal-list-client"
 
-export default async function HayvanlarPage() {
+export default async function HayvanlarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>
+}) {
   const session = await auth()
   if (!session?.user) redirect("/login")
 
+  const { status } = await searchParams
+  const where: Record<string, unknown> = { farmId: session.user.farmId, deletedAt: null }
+  if (status) where.status = status
+
   const animals = await prisma.animal.findMany({
-    where: { farmId: session.user.farmId, deletedAt: null },
+    where,
     select: {
       id: true,
       earTagNumber: true,

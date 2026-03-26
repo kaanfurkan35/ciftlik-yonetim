@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
 export default function Error({
+  error,
   reset,
 }: {
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  console.error("[RootError]", error.message, error.digest)
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md text-center">

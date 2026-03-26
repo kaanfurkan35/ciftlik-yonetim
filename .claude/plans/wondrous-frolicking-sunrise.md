@@ -1,101 +1,91 @@
-# Grafik Visualizasyonları + Data Export
+# Production Readiness — Çiftliğe Teslim Öncesi
 
 ## Context
 
-Recharts v3.8.0, jspdf, jspdf-autotable ve xlsx kütüphaneleri kurulu ama hiçbiri kullanılmıyor. Tüm veriler HTML tabloları ve düz rakamlarla gösteriliyor. Raporlar sayfasında PDF/Excel butonları var ama "yakında" toastu gösteriyor. Bu plan, en yüksek etkili grafikleri ve export özelliğini ekliyor.
+Proje çiftliğe teslim edilecek. Mimari sağlam (RBAC, multi-tenancy, audit, soft delete) ama 3 BLOCKER + birkaç HIGH seviye sorun var. Tek sunucu deployment (çiftlik ortamı) için in-memory rate limiter kabul edilebilir ama diğer sorunlar düzeltilmeli.
 
 ---
 
-## 1. Dashboard Grafikleri (`src/app/(dashboard)/page.tsx`)
+## BLOCKER — Mutlaka Düzeltilmeli
 
-Dashboard'a 2 grafik ekle:
+### 1. `.env` dosyası git'ten çıkarılmalı
+- `.env` committed durumda (DATABASE_URL + AUTH_SECRET açıkta)
+- `git rm --cached .env` ile izlemeden çıkar
+- `.env.example` oluştur (sadece placeholder değerler)
+- AUTH_SECRET placeholder'ı gerçek bir secret'a çevrilmeli
 
-**a) Aylık Süt Üretimi — AreaChart**
-- Son 6 ayın toplam süt üretimini göster
-- X ekseni: ay isimleri (Türkçe), Y ekseni: litre
-- API: Yeni endpoint gerekli değil — client-side `/api/milk` ile son 6 ayı çek ve grupla
-- Veya dashboard server component'inde Prisma ile doğrudan hesapla
+### 2. CSP başlıkları sıkılaştırılmalı
+**Dosya:** `next.config.ts`
+- `'unsafe-eval'` kaldır (Next.js dev'de gerekli, prod'da değil)
+- `'unsafe-inline'` kaldır — Tailwind v4 external CSS kullanıyor, inline gerekmiyor
+- Veya en azından: `process.env.NODE_ENV === 'production'` kontrolü ile sıkılaştır
 
-**b) Gelir/Gider Trendi — BarChart**
-- Son 6 ayın gelir vs gider karşılaştırması
-- API: `/api/finance/summary` zaten `monthlyTrend` döndürüyor (kullanıma hazır)
-- İki renkli bar: yeşil (gelir), kırmızı (gider)
+### 3. Rate limiter — Tek sunucu için kabul edilebilir
+- Çiftlik tek sunucu kullanacaksa in-memory yeterli
+- Yorum olarak "çoklu sunucu için Redis gerekir" notu zaten var
+- **BLOCKER DEĞİL** tek sunucu deployment için → atlayabiliriz
 
-Her iki grafik de `"use client"` wrapper component olarak oluşturulacak (Recharts client-only).
+---
 
-## 2. Finans Sayfası Grafikleri (`src/app/(dashboard)/finans/page.tsx`)
+## HIGH — Teslim öncesi düzeltilmeli
 
-**a) Kategori Dağılımı — PieChart**
-- Gelir kategorileri (süt satışı, hayvan satışı, vb.) pasta grafik
-- Gider kategorileri ayrı pasta grafik
-- Veri: Zaten `summary.incomeByCategory` ve `summary.expenseByCategory` mevcut
+### 4. Hayvanlar sayfası `?status=` query param desteği
+**Dosya:** `src/app/(dashboard)/hayvanlar/page.tsx`
+- Dashboard'dan "Sağmal İnek" tıklayınca `?status=LACTATING` gidiyor ama sayfa bunu filtrelemiyor
+- `searchParams` prop'u alınıp Prisma sorgusuna eklenmeli
 
-**b) 6 Aylık Trend — LineChart**
-- Mevcut HTML tablosunun yerine veya yanına
-- Veri: `summary.monthlyTrend` zaten mevcut
+### 5. Error page'lerde hata loglama
+**Dosyalar:** `src/app/error.tsx`, `src/app/(dashboard)/error.tsx`
+- `console.error(error)` ekle
+- Kullanıcıya "Bir hata oluştu" mesajı göster (zaten var)
 
-## 3. Raporlar Sayfası Grafikleri (`src/app/(dashboard)/raporlar/page.tsx`)
+### 6. Health check endpoint
+- `src/app/api/health-check/route.ts` oluştur
+- DB bağlantısını test et, 200 OK döndür
+- Load balancer / monitoring için gerekli
 
-**a) Sürü Durumu — PieChart**
-- Hayvan status dağılımı (Aktif, Gebe, Laktasyon, Kuru, vb.)
-- Veri: Raporlar sayfasında zaten `statusDistribution` hesaplanıyor
+### 7. Standalone output modu
+**Dosya:** `next.config.ts`
+- `output: 'standalone'` ekle — Docker/VPS deployment için daha küçük image
 
-**b) Irk Dağılımı — BarChart**
-- Horizontal bar chart, ırk başına hayvan sayısı
-- Veri: `breedDistribution` zaten mevcut
+### 8. Seed script güvenliği
+**Dosya:** `prisma/seed.ts`
+- Şifreleri console.log ile yazdırma (production loglarına sızar)
+- Veya `NODE_ENV !== 'production'` kontrolü ekle
 
-**c) Aylık Süt Üretimi — AreaChart**
-- Son 6 ay süt üretimi trendi
-- Veri: `monthlyMilk` zaten hesaplanıyor
+---
 
-**d) Sağlık Uyum — BarChart**
-- Aşı tipleri bazında yapılan/geciken sayılar
+## MEDIUM — İyi olur ama engellemez
 
-## 4. PDF/Excel Export (`src/app/(dashboard)/raporlar/export-buttons.tsx`)
-
-**PDF Export:**
-- `jspdf` + `jspdf-autotable` ile
-- Aktif sekmeye göre tablo verilerini PDF'e dönüştür
-- Çiftlik adı + tarih başlık
-
-**Excel Export:**
-- `xlsx` kütüphanesi ile
-- Aktif sekmeye göre verileri .xlsx olarak indir
-
-## 5. Yeni Chart Components
-
-Oluşturulacak client component'ler:
+### 9. `.env.example` oluştur
 ```
-src/components/charts/
-  milk-production-chart.tsx    — AreaChart (süt üretimi)
-  income-expense-chart.tsx     — BarChart (gelir/gider)
-  category-pie-chart.tsx       — PieChart (kategori dağılımı)
-  status-distribution-chart.tsx — PieChart (hayvan durumu)
-  breed-distribution-chart.tsx  — BarChart (ırk dağılımı)
-  monthly-trend-chart.tsx      — LineChart (aylık trend)
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+AUTH_SECRET=change-this-to-a-random-secret-at-least-32-characters
+NEXTAUTH_URL=http://localhost:3000
 ```
 
-Her component:
-- `"use client"` directive
-- Recharts `ResponsiveContainer` wrapper
-- Türkçe tooltip ve legend
-- Tema uyumlu renkler (`var(--chart-1)` vb. CSS değişkenlerinden)
-- Dark mode desteği
+### 10. Structured logging notu
+- Şu an `console.error` kullanılıyor — tek sunucu için yeterli
+- Gelecekte Sentry/pino eklenebilir
+
+---
 
 ## Dosyalar
 
 | Dosya | İşlem |
 |-------|-------|
-| `src/components/charts/*.tsx` | YENİ — 6 chart component |
-| `src/app/(dashboard)/page.tsx` | DÜZENLE — 2 grafik ekle |
-| `src/app/(dashboard)/finans/page.tsx` | DÜZENLE — 2 grafik ekle |
-| `src/app/(dashboard)/raporlar/page.tsx` | DÜZENLE — 4 grafik ekle |
-| `src/app/(dashboard)/raporlar/export-buttons.tsx` | DÜZENLE — PDF/Excel export |
+| `.env` | `git rm --cached` ile izlemeden çıkar |
+| `.env.example` | YENİ — placeholder değerlerle oluştur |
+| `next.config.ts` | CSP sıkılaştır + `output: 'standalone'` |
+| `src/app/(dashboard)/hayvanlar/page.tsx` | `searchParams` ile status filtresi |
+| `src/app/error.tsx` | `console.error(error)` ekle |
+| `src/app/(dashboard)/error.tsx` | `console.error(error)` ekle |
+| `src/app/api/health-check/route.ts` | YENİ — health check endpoint |
+| `prisma/seed.ts` | Console.log'da şifreleri kaldır |
 
 ## Doğrulama
-- `npm run build` — hatasız
-- `npm run test` — 253+ test geçmeli
-- Dashboard'da 2 grafik görünmeli
-- Finans'ta 2 grafik görünmeli
-- Raporlar'da 4 grafik görünmeli
-- PDF/Excel butonları dosya indirmeli
+1. `npm run build` — hatasız
+2. `npm run test` — 253+ test geçmeli
+3. `.env` artık git'te görünmemeli (`git status` kontrolü)
+4. `curl http://localhost:3000/api/health-check` — 200 OK
+5. `/hayvanlar?status=LACTATING` — sadece sağmal inekleri göstermeli

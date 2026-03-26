@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
 export default function DashboardError({
+  error,
   reset,
 }: {
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  console.error("[DashboardError]", error.message, error.digest)
   return (
     <div className="flex flex-1 items-center justify-center p-4">
       <Card className="w-full max-w-md text-center">

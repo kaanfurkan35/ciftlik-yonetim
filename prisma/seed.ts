@@ -505,8 +505,8 @@ async function main() {
   console.log("Seed verileri basariyla olusturuldu!");
   console.log("========================================");
   console.log(`Ciftlik: ${farm.name}`);
-  console.log(`Admin: admin@ciftlik.com / admin123`);
-  console.log(`Calisan: calisan@ciftlik.com / calisan123`);
+  console.log(`Admin: admin@ciftlik.com`);
+  console.log(`Calisan: calisan@ciftlik.com`);
   console.log(`Hayvan sayisi: ${animals.length}`);
   console.log(`Asi turu: ${vaccinationTypes.length}`);
   console.log(`Yem turu: ${feedTypes.length}`);
