@@ -3,8 +3,6 @@ import {
   Milk,
   Wallet,
   ShieldCheck,
-  FileDown,
-  FileSpreadsheet,
   Users,
 } from "lucide-react"
 import { prisma } from "@/lib/prisma"
@@ -31,6 +29,10 @@ import { PageHeader } from "@/components/shared/page-header"
 import { StatCard } from "@/components/shared/stat-card"
 import { ExportButtons } from "./export-buttons"
 import { formatCurrency } from "@/lib/format"
+import { StatusDistributionChart } from "@/components/charts/status-distribution-chart"
+import { BreedDistributionChart } from "@/components/charts/breed-distribution-chart"
+import { MilkProductionChart } from "@/components/charts/milk-production-chart"
+import { CategoryPieChart } from "@/components/charts/category-pie-chart"
 
 // ============================================================================
 // Veri yükleme fonksiyonları
@@ -255,7 +257,14 @@ export default async function RaporlarPage() {
         title="Raporlar"
         description="Çiftliğinizin genel durumu ve istatistikleri."
       >
-        <ExportButtons />
+        <ExportButtons
+          reportData={{
+            herd: { total: herd.total, byStatus: herd.byStatus, byBreed: herd.byBreed },
+            milk: { totalMilk: milk.totalMilk, monthlySummary: milk.monthlySummary },
+            finance: { totalIncome: finance.totalIncome, totalExpense: finance.totalExpense, profit: finance.profit, incomeByCategory: finance.incomeByCategory, expenseByCategory: finance.expenseByCategory },
+            health: { totalRecords: health.totalVaccinations, vaccinationCompliance: health.totalVaccinations > 0 ? Math.round(((health.totalVaccinations - health.overdueVaccinations) / health.totalVaccinations) * 100) : 0 },
+          }}
+        />
       </PageHeader>
 
       <Tabs defaultValue="suru">
@@ -314,6 +323,18 @@ export default async function RaporlarPage() {
                   </Card>
                 ))}
               </div>
+            </div>
+
+            {/* Grafik dağılımları */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card>
+                <CardHeader><CardTitle>Durum Dağılımı</CardTitle></CardHeader>
+                <CardContent><StatusDistributionChart data={herd.byStatus} /></CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle>Irk Dağılımı</CardTitle></CardHeader>
+                <CardContent><BreedDistributionChart data={herd.byBreed} /></CardContent>
+              </Card>
             </div>
 
             {/* Irka göre dağılım */}
@@ -411,6 +432,12 @@ export default async function RaporlarPage() {
                 className="border-l-4 border-l-accent"
               />
             </div>
+
+            {/* Aylık süt üretimi grafiği */}
+            <Card>
+              <CardHeader><CardTitle>Aylık Süt Üretimi Trendi</CardTitle></CardHeader>
+              <CardContent><MilkProductionChart data={milk.monthlySummary} /></CardContent>
+            </Card>
 
             {/* Aylık özet tablosu */}
             <Card>
@@ -518,6 +545,28 @@ export default async function RaporlarPage() {
                 icon={<BarChart3 className="size-4" />}
                 className={`border-l-4 ${finance.profit >= 0 ? "border-l-success" : "border-l-destructive"}`}
               />
+            </div>
+
+            {/* Gelir/Gider grafikleri */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card>
+                <CardHeader><CardTitle>Gelir Dağılımı</CardTitle></CardHeader>
+                <CardContent>
+                  <CategoryPieChart data={finance.incomeByCategory.map((item) => ({
+                    name: TRANSACTION_CATEGORY_LABELS[item.category] || item.category,
+                    value: item.total,
+                  }))} />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle>Gider Dağılımı</CardTitle></CardHeader>
+                <CardContent>
+                  <CategoryPieChart data={finance.expenseByCategory.map((item) => ({
+                    name: TRANSACTION_CATEGORY_LABELS[item.category] || item.category,
+                    value: item.total,
+                  }))} />
+                </CardContent>
+              </Card>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">

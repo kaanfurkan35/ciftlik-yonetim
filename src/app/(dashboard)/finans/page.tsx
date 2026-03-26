@@ -27,6 +27,8 @@ import {
   TRANSACTION_CATEGORY_LABELS,
 } from "@/lib/constants"
 import { formatCurrency, formatShortDate } from "@/lib/format"
+import { CategoryPieChart } from "@/components/charts/category-pie-chart"
+import { MonthlyTrendChart } from "@/components/charts/monthly-trend-chart"
 
 // ============================================================================
 // Yardımcı fonksiyonlar
@@ -427,12 +429,56 @@ export default function FinansPage() {
                 />
               </div>
 
-              {/* Aylık trend */}
+              {/* Kategori pasta grafikleri */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium">Gelir Da\u011f\u0131l\u0131m\u0131</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CategoryPieChart
+                      data={summary.incomeByCategory.map((c) => ({
+                        name: TRANSACTION_CATEGORY_LABELS[c.category] ?? c.category,
+                        value: c.total,
+                      }))}
+                    />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium">Gider Da\u011f\u0131l\u0131m\u0131</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CategoryPieChart
+                      data={summary.expenseByCategory.map((c) => ({
+                        name: TRANSACTION_CATEGORY_LABELS[c.category] ?? c.category,
+                        value: c.total,
+                      }))}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Aylık trend grafik */}
               {summary.monthlyTrend.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-sm font-medium">
-                      Aylık Trend (Son 6 Ay)
+                      6 Ayl\u0131k Gelir/Gider Trendi
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <MonthlyTrendChart data={summary.monthlyTrend} />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Aylık trend tablo */}
+              {summary.monthlyTrend.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium">
+                      Ayl\u0131k Trend (Son 6 Ay)
                     </CardTitle>
                   </CardHeader>
                   <CardContent>

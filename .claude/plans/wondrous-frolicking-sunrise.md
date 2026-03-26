@@ -1,47 +1,101 @@
-# Kalan İşler — Çiftlik Yönetim
+# Grafik Visualizasyonları + Data Export
 
 ## Context
 
-Faz A (ayarlar sayfası + yedek UI), Faz B (eksik API endpoint'leri), ve Faz C (37 route'a audit log) tamamlandı ama henüz commit edilmedi (47 dosya değişiklik). Kalan işler: düzenleme/silme UI, loading skeleton'ları, ve detay sayfaları.
+Recharts v3.8.0, jspdf, jspdf-autotable ve xlsx kütüphaneleri kurulu ama hiçbiri kullanılmıyor. Tüm veriler HTML tabloları ve düz rakamlarla gösteriliyor. Raporlar sayfasında PDF/Excel butonları var ama "yakında" toastu gösteriyor. Bu plan, en yüksek etkili grafikleri ve export özelliğini ekliyor.
 
-## Tamamlanan (commit bekliyor)
-- [x] Ayarlar: çiftlik profili, manuel yedek, yedek geçmişi
-- [x] API: `/api/feeding/records/[id]`, `/api/users/[id]`
-- [x] 37 API route'a audit log eklendi
-- [x] Test düzeltmeleri (8 dosyaya audit mock)
+---
 
-## Kalan — Faz D: Düzenleme/Silme UI
+## 1. Dashboard Grafikleri (`src/app/(dashboard)/page.tsx`)
 
-Her modülün liste sayfasındaki tablolara inline düzenleme/silme butonları eklenmeli. Pattern: `AnimalListClient` componentindeki dropdown menu (Detay/Düzenle/Sil) + `ConfirmDialog` kullanımı.
+Dashboard'a 2 grafik ekle:
 
-**Yaklaşım:** Ayrı edit sayfaları oluşturmak yerine, liste sayfalarına satır bazlı dropdown menü (MoreHorizontal icon) + silme onay dialogu ekle. Düzenleme için modal veya inline form kullanılabilir.
+**a) Aylık Süt Üretimi — AreaChart**
+- Son 6 ayın toplam süt üretimini göster
+- X ekseni: ay isimleri (Türkçe), Y ekseni: litre
+- API: Yeni endpoint gerekli değil — client-side `/api/milk` ile son 6 ayı çek ve grupla
+- Veya dashboard server component'inde Prisma ile doğrudan hesapla
 
-### Modüller:
-1. **Sağlık** (`src/app/(dashboard)/saglik/page.tsx`) — Sağlık ve aşı kayıtlarına sil butonu
-2. **Süt** (`src/app/(dashboard)/sut/page.tsx`) — Süt ve satış kayıtlarına sil butonu
-3. **Üreme** (`src/app/(dashboard)/ureme/page.tsx`) — 4 sekmedeki kayıtlara sil butonu
-4. **Besleme** (`src/app/(dashboard)/besleme/page.tsx`) — 3 sekmedeki kayıtlara sil butonu
-5. **Meralar** (`src/app/(dashboard)/meralar/page.tsx`) — Mera kayıtlarına sil butonu
-6. **Kullanıcılar** (`src/app/(dashboard)/kullanicilar/page.tsx`) — Kullanıcı düzenle/sil
+**b) Gelir/Gider Trendi — BarChart**
+- Son 6 ayın gelir vs gider karşılaştırması
+- API: `/api/finance/summary` zaten `monthlyTrend` döndürüyor (kullanıma hazır)
+- İki renkli bar: yeşil (gelir), kırmızı (gider)
 
-### Her modül için:
-- Sayfayı client component'e çevir (delete fetch için)
-- Satır sonuna dropdown menü ekle (MoreHorizontal → Sil)
-- `ConfirmDialog` ile silme onayı
-- `fetch(url, { method: 'DELETE' })` + `router.refresh()` + toast
+Her iki grafik de `"use client"` wrapper component olarak oluşturulacak (Recharts client-only).
 
-## Kalan — Faz E: Loading Skeleton'ları
+## 2. Finans Sayfası Grafikleri (`src/app/(dashboard)/finans/page.tsx`)
 
-5 eksik `loading.tsx` dosyası:
-- `src/app/(dashboard)/loading.tsx` (dashboard)
-- `src/app/(dashboard)/ayarlar/loading.tsx`
-- `src/app/(dashboard)/bildirimler/loading.tsx`
-- `src/app/(dashboard)/hayvanlar/[id]/loading.tsx`
-- `src/app/(dashboard)/kullanicilar/loading.tsx`
+**a) Kategori Dağılımı — PieChart**
+- Gelir kategorileri (süt satışı, hayvan satışı, vb.) pasta grafik
+- Gider kategorileri ayrı pasta grafik
+- Veri: Zaten `summary.incomeByCategory` ve `summary.expenseByCategory` mevcut
 
-Pattern: Mevcut `src/app/(dashboard)/hayvanlar/loading.tsx` dosyasını referans al — Skeleton component kullan.
+**b) 6 Aylık Trend — LineChart**
+- Mevcut HTML tablosunun yerine veya yanına
+- Veri: `summary.monthlyTrend` zaten mevcut
+
+## 3. Raporlar Sayfası Grafikleri (`src/app/(dashboard)/raporlar/page.tsx`)
+
+**a) Sürü Durumu — PieChart**
+- Hayvan status dağılımı (Aktif, Gebe, Laktasyon, Kuru, vb.)
+- Veri: Raporlar sayfasında zaten `statusDistribution` hesaplanıyor
+
+**b) Irk Dağılımı — BarChart**
+- Horizontal bar chart, ırk başına hayvan sayısı
+- Veri: `breedDistribution` zaten mevcut
+
+**c) Aylık Süt Üretimi — AreaChart**
+- Son 6 ay süt üretimi trendi
+- Veri: `monthlyMilk` zaten hesaplanıyor
+
+**d) Sağlık Uyum — BarChart**
+- Aşı tipleri bazında yapılan/geciken sayılar
+
+## 4. PDF/Excel Export (`src/app/(dashboard)/raporlar/export-buttons.tsx`)
+
+**PDF Export:**
+- `jspdf` + `jspdf-autotable` ile
+- Aktif sekmeye göre tablo verilerini PDF'e dönüştür
+- Çiftlik adı + tarih başlık
+
+**Excel Export:**
+- `xlsx` kütüphanesi ile
+- Aktif sekmeye göre verileri .xlsx olarak indir
+
+## 5. Yeni Chart Components
+
+Oluşturulacak client component'ler:
+```
+src/components/charts/
+  milk-production-chart.tsx    — AreaChart (süt üretimi)
+  income-expense-chart.tsx     — BarChart (gelir/gider)
+  category-pie-chart.tsx       — PieChart (kategori dağılımı)
+  status-distribution-chart.tsx — PieChart (hayvan durumu)
+  breed-distribution-chart.tsx  — BarChart (ırk dağılımı)
+  monthly-trend-chart.tsx      — LineChart (aylık trend)
+```
+
+Her component:
+- `"use client"` directive
+- Recharts `ResponsiveContainer` wrapper
+- Türkçe tooltip ve legend
+- Tema uyumlu renkler (`var(--chart-1)` vb. CSS değişkenlerinden)
+- Dark mode desteği
+
+## Dosyalar
+
+| Dosya | İşlem |
+|-------|-------|
+| `src/components/charts/*.tsx` | YENİ — 6 chart component |
+| `src/app/(dashboard)/page.tsx` | DÜZENLE — 2 grafik ekle |
+| `src/app/(dashboard)/finans/page.tsx` | DÜZENLE — 2 grafik ekle |
+| `src/app/(dashboard)/raporlar/page.tsx` | DÜZENLE — 4 grafik ekle |
+| `src/app/(dashboard)/raporlar/export-buttons.tsx` | DÜZENLE — PDF/Excel export |
 
 ## Doğrulama
-1. `npm run build` — hatasız
-2. `npm run test` — 253+ test geçmeli
-3. Her sayfada silme işlemi test et (toast + refresh)
+- `npm run build` — hatasız
+- `npm run test` — 253+ test geçmeli
+- Dashboard'da 2 grafik görünmeli
+- Finans'ta 2 grafik görünmeli
+- Raporlar'da 4 grafik görünmeli
+- PDF/Excel butonları dosya indirmeli
