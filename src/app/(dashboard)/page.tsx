@@ -17,24 +17,18 @@ import {
   ArrowRight,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatCard } from "@/components/shared/stat-card"
-import { MilkProductionChart } from "@/components/charts/milk-production-chart"
-import { IncomeExpenseChart } from "@/components/charts/income-expense-chart"
 import { formatCurrency, formatNumber, formatShortDate } from "@/lib/format"
+import { ANIMAL_STATUS_LABELS } from "@/lib/constants"
 
-interface MilkMonthlyData {
-  month: string
-  label: string
-  total: number
-}
-
-interface MonthlyTrendItem {
-  month: string
-  income: number
-  expense: number
-  profit: number
+interface AnimalItem {
+  id: string
+  name: string | null
+  earTagNumber: string
+  status: string
 }
 
 interface DashboardStats {
@@ -64,8 +58,9 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [tasks, setTasks] = useState<TaskItem[]>([])
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
-  const [milkMonthlyData, setMilkMonthlyData] = useState<MilkMonthlyData[]>([])
-  const [monthlyTrend, setMonthlyTrend] = useState<MonthlyTrendItem[]>([])
+  const [expandedCard, setExpandedCard] = useState<string | null>(null)
+  const [allAnimals, setAllAnimals] = useState<AnimalItem[]>([])
+  const [lactatingAnimals, setLactatingAnimals] = useState<AnimalItem[]>([])
   const [loading, setLoading] = useState(true)
 
   const fetchDashboard = useCallback(async () => {
@@ -80,15 +75,10 @@ export default function DashboardPage() {
         }
       }
 
-      const sixMonthsAgo = new Date()
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
-      const startDate = sixMonthsAgo.toISOString().split("T")[0]
-
-      const [animalsData, lactatingData, milkData, milkChartData, financeData, tasksData, notifData] = await Promise.all([
-        safeFetch("/api/animals?limit=1&page=1"),
-        safeFetch("/api/animals?limit=1&status=LACTATING"),
+      const [animalsData, lactatingData, milkData, financeData, tasksData, notifData] = await Promise.all([
+        safeFetch("/api/animals?limit=10&page=1"),
+        safeFetch("/api/animals?limit=10&status=LACTATING"),
         safeFetch("/api/milk?limit=1&page=1"),
-        safeFetch(`/api/milk?limit=100&startDate=${startDate}`),
         safeFetch("/api/finance/summary"),
         safeFetch("/api/tasks?limit=5&sortOrder=asc"),
         safeFetch("/api/notifications?limit=5"),
@@ -101,34 +91,14 @@ export default function DashboardPage() {
         monthlyIncome: financeData?.data?.totalIncome ?? 0,
       })
 
+      setAllAnimals(Array.isArray(animalsData?.data) ? animalsData.data : [])
+      setLactatingAnimals(Array.isArray(lactatingData?.data) ? lactatingData.data : [])
+
       const taskList = tasksData?.data
       setTasks(Array.isArray(taskList) ? taskList : [])
 
       const notifList = notifData?.data?.notifications ?? notifData?.data
       setNotifications(Array.isArray(notifList) ? notifList : [])
-
-      // Process milk data for monthly chart
-      const milkRecords = Array.isArray(milkChartData?.data) ? milkChartData.data : []
-      const milkByMonth: Record<string, number> = {}
-      const monthNames = ["Oca", "\u015eub", "Mar", "Nis", "May", "Haz", "Tem", "A\u011fu", "Eyl", "Eki", "Kas", "Ara"]
-      for (const record of milkRecords) {
-        const d = new Date(record.date || record.createdAt)
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
-        milkByMonth[key] = (milkByMonth[key] || 0) + Number(record.totalAmount || record.amount || 0)
-      }
-      const sortedMilkMonths = Object.keys(milkByMonth).sort()
-      setMilkMonthlyData(
-        sortedMilkMonths.map((key) => ({
-          month: key,
-          label: monthNames[parseInt(key.split("-")[1]) - 1] || key,
-          total: milkByMonth[key],
-        }))
-      )
-
-      // Store monthly trend from finance summary
-      if (financeData?.data?.monthlyTrend) {
-        setMonthlyTrend(financeData.data.monthlyTrend)
-      }
     } catch (err) {
       console.error("Dashboard veri hatası:", err)
       setStats({ totalAnimals: 0, lactatingAnimals: 0, todayMilk: 0, monthlyIncome: 0 })
@@ -172,24 +142,24 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Stat Cards */}
+      {/* Stat Cards — tıklanınca detay gösterir */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Link href="/hayvanlar" className="block">
+        <div className="cursor-pointer" onClick={() => setExpandedCard(expandedCard === "animals" ? null : "animals")}>
           <StatCard
             title="Toplam Hayvan"
             value={formatNumber(stats?.totalAnimals ?? 0)}
             icon={<Beef className="size-5" />}
             borderColor="border-l-primary"
           />
-        </Link>
-        <Link href="/hayvanlar" className="block">
+        </div>
+        <div className="cursor-pointer" onClick={() => setExpandedCard(expandedCard === "lactating" ? null : "lactating")}>
           <StatCard
             title="Sağmal İnek"
             value={formatNumber(stats?.lactatingAnimals ?? 0)}
             icon={<Droplets className="size-5" />}
             borderColor="border-l-success"
           />
-        </Link>
+        </div>
         <Link href="/sut" className="block">
           <StatCard
             title="Süt Kayıtları"
@@ -207,6 +177,72 @@ export default function DashboardPage() {
           />
         </Link>
       </div>
+
+      {/* Expanded Card Detail */}
+      {expandedCard === "animals" && (
+        <Card className="animate-fade-in shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base">Hayvanlar</CardTitle>
+            <Button variant="ghost" size="sm" render={<Link href="/hayvanlar" />}>
+              Tümünü Gör <ArrowRight className="ml-1 size-3" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {allAnimals.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Henüz hayvan kaydı yok.</p>
+            ) : (
+              <div className="grid gap-1 sm:grid-cols-2">
+                {allAnimals.map((a) => (
+                  <Link
+                    key={a.id}
+                    href={`/hayvanlar/${a.id}`}
+                    className="flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="size-1.5 rounded-full bg-primary" />
+                      <span className="font-medium">{a.name || a.earTagNumber}</span>
+                      <span className="text-xs text-muted-foreground font-mono">{a.earTagNumber}</span>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">
+                      {ANIMAL_STATUS_LABELS[a.status] || a.status}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {expandedCard === "lactating" && (
+        <Card className="animate-fade-in shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base">Sağmal İnekler</CardTitle>
+            <Button variant="ghost" size="sm" render={<Link href="/hayvanlar?status=LACTATING" />}>
+              Tümünü Gör <ArrowRight className="ml-1 size-3" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {lactatingAnimals.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sağmal inek bulunmuyor.</p>
+            ) : (
+              <div className="grid gap-1 sm:grid-cols-2">
+                {lactatingAnimals.map((a) => (
+                  <Link
+                    key={a.id}
+                    href={`/hayvanlar/${a.id}`}
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
+                  >
+                    <span className="size-1.5 rounded-full bg-success" />
+                    <span className="font-medium">{a.name || a.earTagNumber}</span>
+                    <span className="text-xs text-muted-foreground font-mono">{a.earTagNumber}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Actions */}
       <Card className="shadow-sm">
@@ -242,26 +278,6 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Charts */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Ayl\u0131k S\u00fct \u00dcretimi</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <MilkProductionChart data={milkMonthlyData} />
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Gelir / Gider Trendi</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <IncomeExpenseChart data={monthlyTrend} />
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Two columns: Tasks + Notifications */}
       <div className="grid gap-4 lg:grid-cols-2">

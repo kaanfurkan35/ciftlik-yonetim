@@ -2,9 +2,14 @@
 
 import { useState } from "react"
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
-import { Calendar, User, AlertTriangle, GripVertical } from "lucide-react"
+import { Calendar, User, AlertTriangle, GripVertical, Pencil, X, Save } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { NativeSelect } from "@/components/ui/native-select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TASK_STATUS_LABELS, TASK_PRIORITY_LABELS } from "@/lib/constants"
 import { formatShortDate } from "@/lib/format"
@@ -45,6 +50,55 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({ tasks: initialTasks }: KanbanBoardProps) {
   const [tasks, setTasks] = useState(initialTasks)
+  const [editingTask, setEditingTask] = useState<TaskItem | null>(null)
+  const [editForm, setEditForm] = useState({ title: "", description: "", priority: "", dueDate: "" })
+  const [isSaving, setIsSaving] = useState(false)
+
+  function startEdit(task: TaskItem) {
+    setEditingTask(task)
+    setEditForm({
+      title: task.title,
+      description: task.description || "",
+      priority: task.priority,
+      dueDate: task.dueDate ? task.dueDate.substring(0, 10) : "",
+    })
+  }
+
+  async function saveEdit() {
+    if (!editingTask || !editForm.title.trim()) return
+    setIsSaving(true)
+    try {
+      const body: Record<string, unknown> = {
+        title: editForm.title.trim(),
+        description: editForm.description.trim() || null,
+        priority: editForm.priority,
+      }
+      if (editForm.dueDate) body.dueDate = editForm.dueDate
+
+      const res = await fetch(`/api/tasks/${editingTask.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) throw new Error()
+
+      setTasks((prev) =>
+        prev.map((t) => t.id === editingTask.id ? {
+          ...t,
+          title: editForm.title.trim(),
+          description: editForm.description.trim() || null,
+          priority: editForm.priority,
+          dueDate: editForm.dueDate || t.dueDate,
+        } : t)
+      )
+      toast.success("Görev güncellendi")
+      setEditingTask(null)
+    } catch {
+      toast.error("Görev güncellenemedi")
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   const tasksByStatus = STATUS_COLUMNS.reduce(
     (acc, status) => {
@@ -85,6 +139,7 @@ export function KanbanBoard({ tasks: initialTasks }: KanbanBoardProps) {
   }
 
   return (
+    <>
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {STATUS_COLUMNS.map((status) => (
@@ -131,6 +186,12 @@ export function KanbanBoard({ tasks: initialTasks }: KanbanBoardProps) {
                                 <CardTitle className="flex-1 text-sm leading-snug">
                                   {task.title}
                                 </CardTitle>
+                                <button
+                                  onClick={() => startEdit(task)}
+                                  className="shrink-0 rounded p-1 text-muted-foreground/40 transition-colors hover:bg-muted hover:text-foreground"
+                                >
+                                  <Pencil className="size-3" />
+                                </button>
                               </CardHeader>
                               <CardContent className="space-y-2 pl-10">
                                 {task.description && (
@@ -181,5 +242,69 @@ export function KanbanBoard({ tasks: initialTasks }: KanbanBoardProps) {
         ))}
       </div>
     </DragDropContext>
+
+      {/* Edit Task Overlay */}
+      {editingTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setEditingTask(null)}>
+          <Card className="w-full max-w-md animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-base">Görevi Düzenle</CardTitle>
+              <button onClick={() => setEditingTask(null)} className="rounded p-1 hover:bg-muted">
+                <X className="size-4" />
+              </button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-title">Başlık</Label>
+                <Input
+                  id="edit-title"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-desc">Açıklama</Label>
+                <Textarea
+                  id="edit-desc"
+                  value={editForm.description}
+                  onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-priority">Öncelik</Label>
+                  <NativeSelect
+                    id="edit-priority"
+                    value={editForm.priority}
+                    onChange={(e) => setEditForm((f) => ({ ...f, priority: e.target.value }))}
+                  >
+                    {Object.entries(TASK_PRIORITY_LABELS).map(([val, label]) => (
+                      <option key={val} value={val}>{label}</option>
+                    ))}
+                  </NativeSelect>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-date">Bitiş Tarihi</Label>
+                  <Input
+                    id="edit-date"
+                    type="date"
+                    value={editForm.dueDate}
+                    onChange={(e) => setEditForm((f) => ({ ...f, dueDate: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditingTask(null)}>İptal</Button>
+                <Button onClick={saveEdit} disabled={isSaving || !editForm.title.trim()}>
+                  <Save className="size-4" />
+                  {isSaving ? "Kaydediliyor..." : "Kaydet"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </>
   )
 }
