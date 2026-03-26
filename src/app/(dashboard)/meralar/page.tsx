@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PASTURE_CONDITION_LABELS } from "@/lib/constants"
+import { DeleteButton } from "@/components/shared/delete-button"
 
 const CONDITION_COLORS: Record<string, string> = {
   EXCELLENT: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
@@ -107,7 +108,10 @@ export default async function MeralarPage() {
 
                 <div className="flex items-center justify-between border-t pt-2 text-xs text-muted-foreground">
                   <span>Otlatma: {pasture._count.grazingRecords} kayıt</span>
-                  <span>Ekleyen: {pasture.createdBy.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span>Ekleyen: {pasture.createdBy.name}</span>
+                    <DeleteButton id={pasture.id} apiUrl="/api/pastures" entityName="Mera" />
+                  </div>
                 </div>
               </CardContent>
             </Card>

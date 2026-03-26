@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table"
 import { FEED_UNIT_LABELS } from "@/lib/constants"
 import { formatShortDate, formatCurrency, formatNumber } from "@/lib/format"
+import { DeleteButton } from "@/components/shared/delete-button"
 
 export default async function BeslemePage() {
   const session = await auth()
@@ -218,6 +219,7 @@ export default async function BeslemePage() {
                       <TableHead className="text-right">Minimum Stok</TableHead>
                       <TableHead className="text-right">Birim Fiyat</TableHead>
                       <TableHead>Durum</TableHead>
+                      <TableHead>İşlem</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -258,6 +260,9 @@ export default async function BeslemePage() {
                               <Badge variant="secondary">Yeterli</Badge>
                             )}
                           </TableCell>
+                          <TableCell>
+                            <DeleteButton id={ft.id} apiUrl="/api/feeding/types" entityName="Yem türü" />
+                          </TableCell>
                         </TableRow>
                       )
                     })}
@@ -297,6 +302,7 @@ export default async function BeslemePage() {
                       <TableHead className="text-right">Toplam Maliyet</TableHead>
                       <TableHead>Tedarikçi</TableHead>
                       <TableHead>Fatura No</TableHead>
+                      <TableHead>İşlem</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -317,6 +323,9 @@ export default async function BeslemePage() {
                         </TableCell>
                         <TableCell>{p.supplier || "-"}</TableCell>
                         <TableCell>{p.invoiceNumber || "-"}</TableCell>
+                        <TableCell>
+                          <DeleteButton id={p.id} apiUrl="/api/feeding/purchases" entityName="Satın alma kaydı" />
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -354,6 +363,7 @@ export default async function BeslemePage() {
                       <TableHead className="text-right">Miktar</TableHead>
                       <TableHead>Hayvan / Grup</TableHead>
                       <TableHead>Notlar</TableHead>
+                      <TableHead>İşlem</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -385,6 +395,9 @@ export default async function BeslemePage() {
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate">
                           {r.notes || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <DeleteButton id={r.id} apiUrl="/api/feeding/records" entityName="Yemleme kaydı" />
                         </TableCell>
                       </TableRow>
                     ))}

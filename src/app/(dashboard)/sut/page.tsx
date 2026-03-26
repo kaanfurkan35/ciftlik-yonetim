@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { MILK_SESSION_LABELS } from "@/lib/constants"
 import { formatShortDate, formatCurrency } from "@/lib/format"
+import { DeleteButton } from "@/components/shared/delete-button"
 
 interface MilkRecord {
   id: string
@@ -236,6 +237,7 @@ export default function SutPage() {
                       <TableHead className="text-right">Yağ %</TableHead>
                       <TableHead className="text-right">Protein %</TableHead>
                       <TableHead>Not</TableHead>
+                      <TableHead>İşlem</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -263,6 +265,9 @@ export default function SutPage() {
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate text-muted-foreground">
                           {record.notes || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <DeleteButton id={record.id} apiUrl="/api/milk" entityName="Süt kaydı" onDeleted={fetchData} />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -339,6 +344,7 @@ export default function SutPage() {
                       <TableHead className="text-right">Protein %</TableHead>
                       <TableHead className="text-right">SHS</TableHead>
                       <TableHead>Not</TableHead>
+                      <TableHead>İşlem</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -372,6 +378,9 @@ export default function SutPage() {
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate text-muted-foreground">
                           {record.notes || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <DeleteButton id={record.id} apiUrl="/api/milk" entityName="Süt kaydı" onDeleted={fetchData} />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -419,6 +428,7 @@ export default function SutPage() {
                       <TableHead className="text-right">Toplam Tutar</TableHead>
                       <TableHead>Fatura No</TableHead>
                       <TableHead>Not</TableHead>
+                      <TableHead>İşlem</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -442,6 +452,9 @@ export default function SutPage() {
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate text-muted-foreground">
                           {sale.notes || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <DeleteButton id={sale.id} apiUrl="/api/milk/sales" entityName="Süt satışı" onDeleted={fetchData} />
                         </TableCell>
                       </TableRow>
                     ))}

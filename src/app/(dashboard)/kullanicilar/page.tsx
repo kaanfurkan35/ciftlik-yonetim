@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { USER_ROLE_LABELS } from "@/lib/constants"
+import { DeleteButton } from "@/components/shared/delete-button"
 
 interface UserData {
   id: string
@@ -269,6 +270,7 @@ export default function KullanicilarPage() {
                   <TableHead>Telefon</TableHead>
                   <TableHead>Rol</TableHead>
                   <TableHead>Durum</TableHead>
+                  <TableHead>İşlem</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -310,6 +312,9 @@ export default function KullanicilarPage() {
                       ) : (
                         <Badge variant="outline" className="text-xs">Pasif</Badge>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <DeleteButton id={user.id} apiUrl="/api/users" entityName="Kullanıcı" onDeleted={fetchUsers} />
                     </TableCell>
                   </TableRow>
                 ))}

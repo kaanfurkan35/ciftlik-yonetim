@@ -16,6 +16,7 @@ import {
   GESTATION_DAYS,
 } from "@/lib/constants"
 import { formatShortDate, formatCurrency } from "@/lib/format"
+import { DeleteButton } from "@/components/shared/delete-button"
 
 const HEAT_INTENSITY_COLORS: Record<string, string> = {
   WEAK: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
@@ -269,6 +270,7 @@ export default async function UremePage() {
                         <th className="pb-2 pr-4 font-medium">Şiddet</th>
                         <th className="pb-2 pr-4 font-medium">Gözlemleyen</th>
                         <th className="pb-2 font-medium">Notlar</th>
+                        <th className="pb-2 font-medium">İşlem</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -289,7 +291,10 @@ export default async function UremePage() {
                             </Badge>
                           </td>
                           <td className="py-2 pr-4">{record.observedBy?.name ?? "-"}</td>
-                          <td className="py-2">{record.notes || "-"}</td>
+                          <td className="py-2 pr-4">{record.notes || "-"}</td>
+                          <td className="py-2">
+                            <DeleteButton id={record.id} apiUrl="/api/breeding/heat" entityName="Kızgınlık kaydı" />
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -329,6 +334,7 @@ export default async function UremePage() {
                         <th className="pb-2 pr-4 font-medium">Boğa/Semen</th>
                         <th className="pb-2 pr-4 font-medium">Teknisyen</th>
                         <th className="pb-2 font-medium">Maliyet</th>
+                        <th className="pb-2 font-medium">İşlem</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -352,7 +358,10 @@ export default async function UremePage() {
                               : record.semenBatchNumber || "-"}
                           </td>
                           <td className="py-2 pr-4">{record.technicianName || "-"}</td>
-                          <td className="py-2">{record.cost != null ? formatCurrency(Number(record.cost)) : "-"}</td>
+                          <td className="py-2 pr-4">{record.cost != null ? formatCurrency(Number(record.cost)) : "-"}</td>
+                          <td className="py-2">
+                            <DeleteButton id={record.id} apiUrl="/api/breeding/insemination" entityName="Tohumlama kaydı" />
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -392,6 +401,7 @@ export default async function UremePage() {
                         <th className="pb-2 pr-4 font-medium">Yöntem</th>
                         <th className="pb-2 pr-4 font-medium">Beklenen Doğum</th>
                         <th className="pb-2 font-medium">Kontrol Eden</th>
+                        <th className="pb-2 font-medium">İşlem</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -413,7 +423,10 @@ export default async function UremePage() {
                           </td>
                           <td className="py-2 pr-4">{record.method || "-"}</td>
                           <td className="py-2 pr-4">{record.expectedCalvingDate ? formatShortDate(record.expectedCalvingDate) : "-"}</td>
-                          <td className="py-2">{record.checkedBy?.name ?? "-"}</td>
+                          <td className="py-2 pr-4">{record.checkedBy?.name ?? "-"}</td>
+                          <td className="py-2">
+                            <DeleteButton id={record.id} apiUrl="/api/breeding/pregnancy" entityName="Gebelik kontrolü" />
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -453,6 +466,7 @@ export default async function UremePage() {
                         <th className="pb-2 pr-4 font-medium">Güçlü Doğum Skoru</th>
                         <th className="pb-2 pr-4 font-medium">Komplikasyonlar</th>
                         <th className="pb-2 font-medium">Yardim Eden</th>
+                        <th className="pb-2 font-medium">İşlem</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -483,7 +497,10 @@ export default async function UremePage() {
                             {record.dystociaScore != null ? `${record.dystociaScore}/5` : "-"}
                           </td>
                           <td className="py-2 pr-4">{record.complications || "-"}</td>
-                          <td className="py-2">{record.assistedBy?.name ?? "-"}</td>
+                          <td className="py-2 pr-4">{record.assistedBy?.name ?? "-"}</td>
+                          <td className="py-2">
+                            <DeleteButton id={record.id} apiUrl="/api/breeding/calving" entityName="Doğum kaydı" />
+                          </td>
                         </tr>
                       ))}
                     </tbody>

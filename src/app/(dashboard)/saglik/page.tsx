@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { HEALTH_RECORD_TYPE_LABELS } from "@/lib/constants"
 import { formatShortDate, formatCurrency } from "@/lib/format"
+import { DeleteButton } from "@/components/shared/delete-button"
 
 function isOverdue(nextDueDate: Date | null | undefined): boolean {
   if (!nextDueDate) return false
@@ -131,6 +132,7 @@ export default async function SaglikPage() {
                       <th className="p-4 font-medium">İlaç</th>
                       <th className="p-4 font-medium">Veteriner</th>
                       <th className="p-4 font-medium">Maliyet</th>
+                      <th className="p-4 font-medium">İşlem</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -155,6 +157,9 @@ export default async function SaglikPage() {
                         <td className="p-4">{record.medication || "-"}</td>
                         <td className="p-4">{record.vetName || "-"}</td>
                         <td className="p-4">{record.cost != null ? formatCurrency(record.cost) : "-"}</td>
+                        <td className="p-4">
+                          <DeleteButton id={record.id} apiUrl="/api/health" entityName="Sağlık kaydı" />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -191,6 +196,7 @@ export default async function SaglikPage() {
                       <th className="p-4 font-medium">Parti No</th>
                       <th className="p-4 font-medium">Maliyet</th>
                       <th className="p-4 font-medium">Durum</th>
+                      <th className="p-4 font-medium">İşlem</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -235,6 +241,9 @@ export default async function SaglikPage() {
                           ) : (
                             <Badge variant="outline">-</Badge>
                           )}
+                        </td>
+                        <td className="p-4">
+                          <DeleteButton id={record.id} apiUrl="/api/vaccinations" entityName="Aşı kaydı" />
                         </td>
                       </tr>
                     ))}
